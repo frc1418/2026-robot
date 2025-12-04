@@ -23,21 +23,34 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
+
     private final ModuleIO io;
-    private final ModuleIOInputsAutoLogged inputs = new ModuleIOInputsAutoLogged();
+    private final ModuleIOInputsAutoLogged inputs =
+        new ModuleIOInputsAutoLogged();
     private final int index;
 
     private final Alert driveDisconnectedAlert;
     private final Alert turnDisconnectedAlert;
-    private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
+    private SwerveModulePosition[] odometryPositions =
+        new SwerveModulePosition[] {};
 
     public Module(ModuleIO io, int index) {
         this.io = io;
         this.index = index;
         driveDisconnectedAlert =
-                new Alert("Disconnected drive motor on module " + Integer.toString(index) + ".", AlertType.kError);
+            new Alert(
+                "Disconnected drive motor on module " +
+                Integer.toString(index) +
+                ".",
+                AlertType.kError
+            );
         turnDisconnectedAlert =
-                new Alert("Disconnected turn motor on module " + Integer.toString(index) + ".", AlertType.kError);
+            new Alert(
+                "Disconnected turn motor on module " +
+                Integer.toString(index) +
+                ".",
+                AlertType.kError
+            );
     }
 
     public void periodic() {
@@ -48,9 +61,11 @@ public class Module {
         int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
         odometryPositions = new SwerveModulePosition[sampleCount];
         for (int i = 0; i < sampleCount; i++) {
-            double positionMeters = inputs.odometryDrivePositionsRad[i] * wheelRadiusMeters;
+            double positionMeters =
+                inputs.odometryDrivePositionsRad[i] * wheelRadiusMeters;
             Rotation2d angle = inputs.odometryTurnPositions[i];
-            odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
+            odometryPositions[i] =
+                new SwerveModulePosition(positionMeters, angle);
         }
 
         // Update alerts

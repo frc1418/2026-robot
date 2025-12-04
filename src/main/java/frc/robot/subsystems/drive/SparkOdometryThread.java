@@ -26,10 +26,11 @@ import java.util.function.DoubleSupplier;
 /**
  * Provides an interface for asynchronously reading high-frequency measurements to a set of queues.
  *
- * <p>This version includes an overload for Spark signals, which checks for errors to ensure that all measurements in
- * the sample are valid.
+ * <p>This version includes an overload for Spark signals, which checks for errors to ensure that
+ * all measurements in the sample are valid.
  */
 public class SparkOdometryThread {
+
     private final List<SparkBase> sparks = new ArrayList<>();
     private final List<DoubleSupplier> sparkSignals = new ArrayList<>();
     private final List<DoubleSupplier> genericSignals = new ArrayList<>();
@@ -58,7 +59,10 @@ public class SparkOdometryThread {
     }
 
     /** Registers a Spark signal to be read from the thread. */
-    public Queue<Double> registerSignal(SparkBase spark, DoubleSupplier signal) {
+    public Queue<Double> registerSignal(
+        SparkBase spark,
+        DoubleSupplier signal
+    ) {
         Queue<Double> queue = new ArrayBlockingQueue<>(20);
         Drive.odometryLock.lock();
         try {
@@ -119,7 +123,9 @@ public class SparkOdometryThread {
                     sparkQueues.get(i).offer(sparkValues[i]);
                 }
                 for (int i = 0; i < genericSignals.size(); i++) {
-                    genericQueues.get(i).offer(genericSignals.get(i).getAsDouble());
+                    genericQueues
+                        .get(i)
+                        .offer(genericSignals.get(i).getAsDouble());
                 }
                 for (int i = 0; i < timestampQueues.size(); i++) {
                     timestampQueues.get(i).offer(timestamp);

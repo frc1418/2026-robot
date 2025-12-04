@@ -26,49 +26,58 @@ import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 
 public class DriveConstants {
-    public static final double maxSpeedMetersPerSec = 4.8;
+
+    public static final double maxSpeedMetersPerSec = 4.36;
     public static final double odometryFrequency = 100.0; // Hz
     public static final double trackWidth = Units.inchesToMeters(26.5);
     public static final double wheelBase = Units.inchesToMeters(26.5);
-    public static final double driveBaseRadius = Math.hypot(trackWidth / 2.0, wheelBase / 2.0);
-    public static final Translation2d[] moduleTranslations = new Translation2d[] {
-        new Translation2d(trackWidth / 2.0, wheelBase / 2.0),
-        new Translation2d(trackWidth / 2.0, -wheelBase / 2.0),
-        new Translation2d(-trackWidth / 2.0, wheelBase / 2.0),
-        new Translation2d(-trackWidth / 2.0, -wheelBase / 2.0)
-    };
+    public static final double driveBaseRadius = Math.hypot(
+        trackWidth / 2.0,
+        wheelBase / 2.0
+    );
+    public static final Translation2d[] moduleTranslations =
+        new Translation2d[] {
+            new Translation2d(trackWidth / 2.0, wheelBase / 2.0),
+            new Translation2d(trackWidth / 2.0, -wheelBase / 2.0),
+            new Translation2d(-trackWidth / 2.0, wheelBase / 2.0),
+            new Translation2d(-trackWidth / 2.0, -wheelBase / 2.0)
+        };
+
+    public static final Rotation2d gyroOffset = new Rotation2d(Math.PI / 2);
 
     // Zeroed rotation values for each module, see setup instructions
-    public static final Rotation2d frontLeftZeroRotation = new Rotation2d(0.0);
+    public static final Rotation2d frontLeftZeroRotation = new Rotation2d( -Math.PI / 2 );
     public static final Rotation2d frontRightZeroRotation = new Rotation2d(0.0);
-    public static final Rotation2d backLeftZeroRotation = new Rotation2d(0.0);
-    public static final Rotation2d backRightZeroRotation = new Rotation2d(0.0);
+    public static final Rotation2d backLeftZeroRotation = new Rotation2d( Math.PI );
+    public static final Rotation2d backRightZeroRotation = new Rotation2d( Math.PI / 2 );
 
     // Device CAN IDs
     public static final int pigeonCanId = 9;
 
     public static final int frontLeftDriveCanId = 1;
-    public static final int backLeftDriveCanId = 3;
-    public static final int frontRightDriveCanId = 5;
-    public static final int backRightDriveCanId = 7;
-
     public static final int frontLeftTurnCanId = 2;
+    public static final int frontRightDriveCanId = 7;
+    public static final int frontRightTurnCanId = 8;
+    public static final int backLeftDriveCanId = 3;
     public static final int backLeftTurnCanId = 4;
-    public static final int frontRightTurnCanId = 6;
-    public static final int backRightTurnCanId = 8;
+    public static final int backRightDriveCanId = 5;
+    public static final int backRightTurnCanId = 6;
 
     // Drive motor configuration
     public static final int driveMotorCurrentLimit = 60;
-    public static final double wheelRadiusMeters = Units.inchesToMeters(1.5);
+    public static final double wheelRadiusMeters = 0.038;
+    // MAXSwerve with 14 pinion teeth and 22 spur teeth
     public static final double driveMotorReduction =
-            (45.0 * 22.0) / (14.0 * 15.0); // MAXSwerve with 14 pinion teeth and 22 spur teeth
+        (45.0 * 22.0) / (14.0 * 15.0);
     public static final DCMotor driveGearbox = DCMotor.getNeoVortex(1);
 
     // Drive encoder configuration
+    // Rotor Rotations -> Wheel Radians
     public static final double driveEncoderPositionFactor =
-            2 * Math.PI / driveMotorReduction; // Rotor Rotations -> Wheel Radians
+        2 * Math.PI / driveMotorReduction;
+    // Rotor RPM -> Wheel Rad/Sec
     public static final double driveEncoderVelocityFactor =
-            (2 * Math.PI) / 60.0 / driveMotorReduction; // Rotor RPM -> Wheel Rad/Sec
+        (2 * Math.PI) / 60.0 / driveMotorReduction;
 
     // Drive PID configuration
     public static final double driveKp = 0.0;
@@ -77,8 +86,8 @@ public class DriveConstants {
     public static final double driveKv = 0.1;
     public static final double driveSimP = 0.05;
     public static final double driveSimD = 0.0;
-    public static final double driveSimKs = 0.0;
-    public static final double driveSimKv = 0.0789;
+    public static final double driveSimKs = 0.03631;
+    public static final double driveSimKv = 0.09470;
 
     // Turn motor configuration
     public static final boolean turnInverted = false;
@@ -102,24 +111,29 @@ public class DriveConstants {
     // PathPlanner configuration
     public static final double robotMassKg = 45;
     public static final double robotMOI = 6.883;
-    public static final double wheelCOF = 1.2;
+    public static final double wheelCOF = COTS.WHEELS.BLUE_NITRILE_TREAD.cof;
     public static final RobotConfig ppConfig = new RobotConfig(
-            robotMassKg,
-            robotMOI,
-            new ModuleConfig(
-                    wheelRadiusMeters,
-                    maxSpeedMetersPerSec,
-                    wheelCOF,
-                    driveGearbox.withReduction(driveMotorReduction),
-                    driveMotorCurrentLimit,
-                    1),
-            moduleTranslations);
+        robotMassKg,
+        robotMOI,
+        new ModuleConfig(
+            wheelRadiusMeters,
+            maxSpeedMetersPerSec,
+            wheelCOF,
+            driveGearbox.withReduction(driveMotorReduction),
+            driveMotorCurrentLimit,
+            1
+        ),
+        moduleTranslations
+    );
 
-    public static final DriveTrainSimulationConfig mapleSimConfig = DriveTrainSimulationConfig.Default()
+    public static final DriveTrainSimulationConfig mapleSimConfig =
+        DriveTrainSimulationConfig
+            .Default()
             .withCustomModuleTranslations(moduleTranslations)
             .withRobotMass(Kilogram.of(robotMassKg))
             .withGyro(COTS.ofPigeon2())
-            .withSwerveModule(new SwerveModuleSimulationConfig(
+            .withSwerveModule(
+                new SwerveModuleSimulationConfig(
                     driveGearbox,
                     turnGearbox,
                     driveMotorReduction,
@@ -128,5 +142,7 @@ public class DriveConstants {
                     Volts.of(0.1),
                     Meters.of(wheelRadiusMeters),
                     KilogramSquareMeters.of(0.02),
-                    wheelCOF));
+                    wheelCOF
+                )
+            );
 }

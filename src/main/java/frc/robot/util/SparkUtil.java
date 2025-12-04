@@ -25,11 +25,16 @@ import java.util.function.Supplier;
 import org.ironmaple.simulation.SimulatedArena;
 
 public class SparkUtil {
+
     /** Stores whether any error was has been detected by other utility methods. */
     public static boolean sparkStickyFault = false;
 
     /** Processes a value from a Spark only if the value is valid. */
-    public static void ifOk(SparkBase spark, DoubleSupplier supplier, DoubleConsumer consumer) {
+    public static void ifOk(
+        SparkBase spark,
+        DoubleSupplier supplier,
+        DoubleConsumer consumer
+    ) {
         double value = supplier.getAsDouble();
         if (spark.getLastError() == REVLibError.kOk) {
             consumer.accept(value);
@@ -39,7 +44,11 @@ public class SparkUtil {
     }
 
     /** Processes a value from a Spark only if the value is valid. */
-    public static void ifOk(SparkBase spark, DoubleSupplier[] suppliers, Consumer<double[]> consumer) {
+    public static void ifOk(
+        SparkBase spark,
+        DoubleSupplier[] suppliers,
+        Consumer<double[]> consumer
+    ) {
         double[] values = new double[suppliers.length];
         for (int i = 0; i < suppliers.length; i++) {
             values[i] = suppliers[i].getAsDouble();
@@ -52,7 +61,11 @@ public class SparkUtil {
     }
 
     /** Attempts to run the command until no error is produced. */
-    public static void tryUntilOk(SparkBase spark, int maxAttempts, Supplier<REVLibError> command) {
+    public static void tryUntilOk(
+        SparkBase spark,
+        int maxAttempts,
+        Supplier<REVLibError> command
+    ) {
         for (int i = 0; i < maxAttempts; i++) {
             var error = command.get();
             if (error == REVLibError.kOk) {
@@ -64,11 +77,14 @@ public class SparkUtil {
     }
 
     public static double[] getSimulationOdometryTimeStamps() {
-        final double[] odometryTimeStamps = new double[SimulatedArena.getSimulationSubTicksIn1Period()];
+        final double[] odometryTimeStamps =
+            new double[SimulatedArena.getSimulationSubTicksIn1Period()];
         for (int i = 0; i < odometryTimeStamps.length; i++) {
-            odometryTimeStamps[i] = Timer.getFPGATimestamp()
-                    - 0.02
-                    + i * SimulatedArena.getSimulationDt().in(Seconds);
+            odometryTimeStamps[i] =
+                Timer.getFPGATimestamp() -
+                0.02 +
+                i *
+                SimulatedArena.getSimulationDt().in(Seconds);
         }
 
         return odometryTimeStamps;

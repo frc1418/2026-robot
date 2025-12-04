@@ -182,6 +182,8 @@ task(eventDeploy) {
 }
 createVersionFile.dependsOn(eventDeploy)
 
+def userHome = System.properties['user.home']
+
 // Spotless formatting
 project.compileJava.dependsOn(spotlessApply)
 spotless {
@@ -191,8 +193,14 @@ spotless {
             exclude '**/build/**', '**/build-*/**'
         }
         toggleOffOn()
-        palantirJavaFormat('2.39.0').formatJavadoc(true)
-        removeUnusedImports()
+        prettier(['prettier': '2.8.8', 'prettier-plugin-java': '2.2.0'])
+        .config([
+            'parser': 'java',
+            'tabWidth': 4,
+            'trailingComma': 'none'
+        ])
+        .npmExecutable(userHome + "/.nvm/versions/node/v25.2.1/bin/npm")
+        .nodeExecutable(userHome + "/.nvm/versions/node/v25.2.1/bin/node")
         trimTrailingWhitespace()
         endWithNewline()
     }
@@ -219,7 +227,7 @@ spotless {
             exclude "**/build/**", "**/build-*/**"
         }
         trimTrailingWhitespace()
-        indentWithSpaces(2)
+        indentWithSpaces(4)
         endWithNewline()
     }
 }

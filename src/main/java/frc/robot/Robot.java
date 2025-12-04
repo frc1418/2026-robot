@@ -28,11 +28,13 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
 
 /**
- * The VM is configured to automatically run this class, and to call the functions corresponding to each mode, as
- * described in the TimedRobot documentation. If you change the name of this class or the package after creating this
- * project, you must also update the build.gradle file in the project.
+ * The VM is configured to automatically run this class, and to call the functions corresponding to
+ * each mode, as described in the TimedRobot documentation. If you change the name of this class or
+ * the package after creating this project, you must also update the build.gradle file in the
+ * project.
  */
 public class Robot extends LoggedRobot {
+
     private Command autonomousCommand;
     private RobotContainer robotContainer;
 
@@ -62,18 +64,18 @@ public class Robot extends LoggedRobot {
                 Logger.addDataReceiver(new WPILOGWriter());
                 Logger.addDataReceiver(new NT4Publisher());
                 break;
-
             case SIM:
                 // Running a physics simulator, log to NT
                 Logger.addDataReceiver(new NT4Publisher());
                 break;
-
             case REPLAY:
                 // Replaying a log, set up replay source
                 setUseTiming(false); // Run as fast as possible
                 String logPath = LogFileUtil.findReplayLog();
                 Logger.setReplaySource(new WPILOGReader(logPath));
-                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim")));
+                Logger.addDataReceiver(
+                    new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))
+                );
                 break;
         }
 
@@ -115,7 +117,9 @@ public class Robot extends LoggedRobot {
     @Override
     public void disabledPeriodic() {}
 
-    /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
+    /**
+     * This autonomous runs the autonomous command selected by your {@link RobotContainer} class.
+     */
     @Override
     public void autonomousInit() {
         autonomousCommand = robotContainer.getAutonomousCommand();
@@ -151,9 +155,15 @@ public class Robot extends LoggedRobot {
     public void testInit() {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
-        SimulatedArena.getInstance()
-                .addGamePieceProjectile(ReefscapeCoralOnFly.DropFromCoralStation(
-                        ReefscapeCoralOnFly.CoralStationsSide.LEFT_STATION, DriverStation.Alliance.Red, true));
+        SimulatedArena
+            .getInstance()
+            .addGamePieceProjectile(
+                ReefscapeCoralOnFly.DropFromCoralStation(
+                    ReefscapeCoralOnFly.CoralStationsSide.LEFT_STATION,
+                    DriverStation.Alliance.Red,
+                    true
+                )
+            );
     }
 
     /** This function is called periodically during test mode. */
