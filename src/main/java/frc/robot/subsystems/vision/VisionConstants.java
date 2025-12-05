@@ -31,9 +31,9 @@ public class VisionConstants {
     // Robot to camera transforms
     // (Not used by Limelight, configure in web UI instead)
     public static Transform3d robotToCamera0 = new Transform3d(
-        0.2,
-        0.0,
-        0.2,
+        0.2, // forward/backward (+ is forward, - is backward)
+        0.0, // left/right (+ is left, - is right)
+        0.2, // up/down (+ is up, - is down)
         new Rotation3d(0.0, -0.4, 0.0)
     );
     public static Transform3d robotToCamera1 = new Transform3d(
