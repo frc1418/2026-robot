@@ -1,5 +1,9 @@
 package frc.robot.commands;
 
+import static frc.robot.Constants.driveD;
+import static frc.robot.Constants.driveP;
+import static frc.robot.Constants.rotD;
+import static frc.robot.Constants.rotP;
 import static frc.robot.subsystems.vision.VisionConstants.robotToCamera0;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
@@ -14,7 +18,6 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO.TargetObservation;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ATagAutoAlign extends Command {
 
@@ -30,41 +33,11 @@ public class ATagAutoAlign extends Command {
     private double posZ;
     private double rot;
 
-    private LoggedNetworkNumber driveP = new LoggedNetworkNumber(
-        "/Tuning/driveP",
-        7.5
-    );
-    private LoggedNetworkNumber driveD = new LoggedNetworkNumber(
-        "/Tuning/driveD",
-        0.5
-    );
-    private LoggedNetworkNumber rotP = new LoggedNetworkNumber(
-        "/Tuning/rotP",
-        5.0
-    );
-    private LoggedNetworkNumber rotD = new LoggedNetworkNumber(
-        "/Tuning/rotD",
-        0.0
-    );
+    private PIDController xController;
+    private PIDController yController;
+    private PIDController rotController;
 
-    // TODO: Tune this
-    private PIDController xController = new PIDController(
-        driveP.get(),
-        0.0,
-        driveD.get()
-    );
-    private PIDController yController = new PIDController(
-        driveP.get(),
-        0.0,
-        driveD.get()
-    );
-    private PIDController rotController = new PIDController(
-        rotP.get(),
-        0.0,
-        rotD.get()
-    );
-
-    private boolean finished = false;
+    private boolean finished;
 
     public ATagAutoAlign(
         Drive drive,
@@ -138,17 +111,10 @@ public class ATagAutoAlign extends Command {
         double driveY = yController.calculate(robotRelativeOffset.getY(), posZ);
         double driveRot = rotController.calculate(robotRot.getRadians(), rot);
 
-        double driveVel = Math.sqrt(driveX * driveX + driveY * driveY);
-        double driveOffset = robotRelativeOffset.getDistance(
-            new Translation2d(posX, posZ)
-        );
-        double rotOffset = robotRot.getRadians();
-
         if (
-            driveVel < 0.05 &&
-            driveOffset < 0.05 &&
-            driveRot < 0.05 &&
-            rotOffset < 0.05
+            xController.atSetpoint() &&
+            yController.atSetpoint() &&
+            rotController.atSetpoint()
         ) {
             // finished
             finished = true;

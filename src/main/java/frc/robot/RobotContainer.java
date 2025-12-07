@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -26,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.ATagAutoAlign;
 import frc.robot.commands.DefaultDriveCommands;
+import frc.robot.commands.PoseAutoAlign;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
@@ -184,6 +184,10 @@ public class RobotContainer {
         leftJoystick
             .button(1)
             .onTrue(new ATagAutoAlign(drive, vision, 17, 0.25, 0.5, 0.0));
+
+        leftJoystick
+            .button(2)
+            .onTrue(new PoseAutoAlign(drive, 2.720, 3.026, 1.0));
         /*
 
         // Lock to 0° when A button is held
