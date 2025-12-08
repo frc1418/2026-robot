@@ -122,8 +122,6 @@ public class ATagAutoAlign extends Command {
         Logger.recordOutput("autoAlign/finished", finished);
 
         ChassisSpeeds speeds = new ChassisSpeeds(-driveY, driveX, -driveRot);
-
-        Logger.recordOutput("autoAlign/speeds", speeds);
         drive.runVelocity(speeds);
     }
 

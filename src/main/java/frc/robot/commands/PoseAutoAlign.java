@@ -10,6 +10,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.drive.Drive;
+import org.littletonrobotics.junction.Logger;
 
 public class PoseAutoAlign extends Command {
 
@@ -62,6 +63,7 @@ public class PoseAutoAlign extends Command {
         ) {
             finished = true;
         }
+        Logger.recordOutput("autoAlign/finished", finished);
 
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             driveX,

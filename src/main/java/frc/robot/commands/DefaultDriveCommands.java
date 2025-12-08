@@ -16,9 +16,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -56,21 +54,13 @@ public class DefaultDriveCommands {
         double y
     ) {
         // Apply deadband
-        double linearMagnitude = MathUtil.applyDeadband(
-            Math.hypot(x, y),
-            DEADBAND
+        double magnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
+
+        // Return new linear velocity with square magnitude for better control
+        return new Translation2d(
+            magnitude * magnitude,
+            magnitude > 1e-6 ? new Rotation2d(x, y) : Rotation2d.kZero
         );
-        Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
-
-        // Square magnitude for more precise control
-        linearMagnitude = linearMagnitude * linearMagnitude;
-
-        // Return new linear velocity
-        return new Pose2d(new Translation2d(), linearDirection)
-            .transformBy(
-                new Transform2d(linearMagnitude, 0.0, new Rotation2d())
-            )
-            .getTranslation();
     }
 
     /**
@@ -82,6 +72,10 @@ public class DefaultDriveCommands {
         DoubleSupplier ySupplier,
         DoubleSupplier omegaSupplier
     ) {
+        // this will not change; do not calculate in command
+        boolean isFlipped =
+            DriverStation.getAlliance().isPresent() &&
+            DriverStation.getAlliance().get() == Alliance.Red;
         return Commands.run(
             () -> {
                 // Get linear velocity
@@ -107,9 +101,7 @@ public class DefaultDriveCommands {
                     drive.getMaxLinearSpeedMetersPerSec(),
                     omega * drive.getMaxAngularSpeedRadPerSec()
                 );
-                boolean isFlipped =
-                    DriverStation.getAlliance().isPresent() &&
-                    DriverStation.getAlliance().get() == Alliance.Red;
+
                 speeds =
                     ChassisSpeeds.fromFieldRelativeSpeeds(
                         speeds,
@@ -146,6 +138,10 @@ public class DefaultDriveCommands {
         );
         angleController.enableContinuousInput(-Math.PI, Math.PI);
 
+        boolean isFlipped =
+            DriverStation.getAlliance().isPresent() &&
+            DriverStation.getAlliance().get() == Alliance.Red;
+
         // Construct command
         return Commands
             .run(
@@ -171,9 +167,6 @@ public class DefaultDriveCommands {
                         drive.getMaxLinearSpeedMetersPerSec(),
                         omega
                     );
-                    boolean isFlipped =
-                        DriverStation.getAlliance().isPresent() &&
-                        DriverStation.getAlliance().get() == Alliance.Red;
                     speeds =
                         ChassisSpeeds.fromFieldRelativeSpeeds(
                             speeds,
