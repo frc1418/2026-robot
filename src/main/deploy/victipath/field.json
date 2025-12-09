@@ -1,0 +1,146 @@
+{
+  "startLeft": {
+    "x": 7.122,
+    "y": 6.026,
+    "links": [
+      "startCenter",
+      "transit3",
+      "transit4"
+    ]
+  },
+  "startCenter": {
+    "x": 7.122,
+    "y": 4.026,
+    "links": [
+      "startLeft",
+      "startRight",
+      "transit2",
+      "transit3",
+      "reef3"
+    ]
+  },
+  "startRight": {
+    "x": 7.122,
+    "y": 2.026,
+    "links": [
+      "startCenter",
+      "transit1",
+      "transit2"
+    ]
+  },
+  "reef0": {
+    "x": 3.100,
+    "y": 4.026,
+    "links": [
+      "transit5",
+      "transit0"
+    ]
+  },
+  "reef1": {
+    "x": 3.790,
+    "y": 2.820,
+    "links": [
+      "transit0",
+      "transit1"
+    ]
+  },
+  "reef2": {
+    "x": 5.190,
+    "y": 2.820,
+    "links": [
+      "transit1",
+      "transit2"
+    ]
+  },
+  "reef3": {
+    "x": 5.880,
+    "y": 4.026,
+    "links": [
+      "transit2",
+      "transit3",
+      "startCenter"
+    ]
+  },
+  "reef4": {
+    "x": 5.190,
+    "y": 5.232,
+    "links": [
+      "transit3",
+      "transit4"
+    ]
+  },
+  "reef5": {
+    "x": 3.790,
+    "y": 5.232,
+    "links": [
+      "transit4",
+      "transit5"
+    ]
+  },
+  "transit0": {
+    "x": 2.720,
+    "y": 3.026,
+    "links": [
+      "transit5",
+      "transit1",
+      "reef0",
+      "reef1"
+    ]
+  },
+  "transit1": {
+    "x": 4.490,
+    "y": 2.026,
+    "links": [
+      "startRight",
+      "transit0",
+      "transit2",
+      "reef1",
+      "reef2"
+    ]
+  },
+  "transit2": {
+    "x": 6.260,
+    "y": 3.026,
+    "links": [
+      "startCenter",
+      "startRight",
+      "transit1",
+      "transit3",
+      "reef2",
+      "reef3"
+    ]
+  },
+  "transit3": {
+    "x": 6.260,
+    "y": 5.026,
+    "links": [
+      "startLeft",
+      "startCenter",
+      "transit2",
+      "transit4",
+      "reef3",
+      "reef4"
+    ]
+  },
+  "transit4": {
+    "x": 4.490,
+    "y": 6.026,
+    "links": [
+      "startLeft",
+      "transit3",
+      "transit5",
+      "reef4",
+      "reef5"
+    ]
+  },
+  "transit5": {
+    "x": 2.720,
+    "y": 5.026,
+    "links": [
+      "transit4",
+      "transit0",
+      "reef5",
+      "reef0"
+    ]
+  }
+}

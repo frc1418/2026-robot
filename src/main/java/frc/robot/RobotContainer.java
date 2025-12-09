@@ -13,11 +13,13 @@
 
 package frc.robot;
 
+import static frc.robot.subsystems.drive.DriveConstants.maxSpeedMetersPerSec;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -25,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.ATagAutoAlign;
 import frc.robot.commands.DefaultDriveCommands;
+//import frc.robot.commands.MultiPointPathFollower;
 import frc.robot.commands.PoseAutoAlign;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.vision.*;
@@ -32,6 +35,8 @@ import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import team.vaevictis.victipath.HolonomicPID;
+import team.vaevictis.victipath.VictiPathBuilder;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -160,6 +165,21 @@ public class RobotContainer {
             drive.sysIdDynamic(SysIdRoutine.Direction.kReverse)
         );
 
+        VictiPathBuilder.configure(
+            drive::getPose,
+            drive::runVelocity,
+            new HolonomicPID(7.5, 0.0, 0.5, 5.0, 0.0, 0.0),
+            maxSpeedMetersPerSec
+        );
+
+        VictiPathBuilder.setLogging((Translation2d[] path) -> {
+            Pose2d[] poses = new Pose2d[path.length];
+            for (int i = 0; i < path.length; i++) {
+                poses[i] = new Pose2d(path[i], Rotation2d.kZero);
+            }
+            Logger.recordOutput("pathFollower/Path", poses);
+        });
+
         // Configure the button bindings
         configureButtonBindings();
     }
@@ -188,6 +208,14 @@ public class RobotContainer {
         leftJoystick
             .button(2)
             .onTrue(new PoseAutoAlign(drive, 2.720, 3.026, 1.0));
+
+        leftJoystick
+            .button(3)
+            .onTrue(
+                VictiPathBuilder.driveTo(
+                    new Pose2d(3.100, 4.026, Rotation2d.kZero)
+                )
+            );
         /*
 
         // Lock to 0° when A button is held

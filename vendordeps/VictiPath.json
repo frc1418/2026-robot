@@ -1,0 +1,71 @@
+{
+  "fileName": "VictiPath.json",
+  "name": "VictiPath",
+  "version": "0.0.1",
+  "frcYear": "2025",
+  "uuid": "97df7325-6cf1-4bc6-9474-54c6f2b32da5",
+  "mavenUrls": [
+    "~/.m2"
+  ],
+  "jsonUrl": "https://raw.githubusercontent.com/EdanThomton/VictiPath/refs/heads/main/VictiPath.json",
+  "javaDependencies": [
+    {
+      "groupId": "team.vaevictis.victipath",
+      "artifactId": "VictiPath-java",
+      "version": "0.0.1"
+    }
+  ],
+  "jniDependencies": [
+    {
+      "groupId": "team.vaevictis.victipath",
+      "artifactId": "VictiPath-driver",
+      "version": "0.0.1",
+      "skipInvalidPlatforms": true,
+      "isJar": false,
+      "validPlatforms": [
+        "windowsx86-64",
+        "linuxarm64",
+        "linuxx86-64",
+        "linuxathena",
+        "linuxarm32",
+        "osxuniversal"
+      ]
+    }
+  ],
+  "cppDependencies": [
+    {
+      "groupId": "team.vaevictis.victipath",
+      "artifactId": "VictiPath-cpp",
+      "version": "0.0.1",
+      "libName": "Vendor",
+      "headerClassifier": "headers",
+      "sharedLibrary": false,
+      "skipInvalidPlatforms": true,
+      "binaryPlatforms": [
+        "windowsx86-64",
+        "linuxarm64",
+        "linuxx86-64",
+        "linuxathena",
+        "linuxarm32",
+        "osxuniversal"
+      ]
+    },
+    {
+      "groupId": "team.vaevictis.victipath",
+      "artifactId": "VictiPath-driver",
+      "version": "0.0.1",
+      "libName": "VendorDriver",
+      "headerClassifier": "headers",
+      "sharedLibrary": false,
+      "skipInvalidPlatforms": true,
+      "binaryPlatforms": [
+        "windowsx86-64",
+        "linuxarm64",
+        "linuxx86-64",
+        "linuxathena",
+        "linuxarm32",
+        "osxuniversal"
+      ]
+    }
+  ]
+}
