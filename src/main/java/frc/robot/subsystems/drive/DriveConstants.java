@@ -70,7 +70,7 @@ public class DriveConstants {
     public static final int backRightTurnCanId = 6;
 
     // Drive motor configuration
-    public static final int driveMotorCurrentLimit = 60;
+    public static final int driveMotorCurrentLimit = 30;
     public static final double wheelRadiusMeters = 0.033;
     // MAXSwerve with 14 pinion teeth and 22 spur teeth
     public static final double driveMotorReduction =

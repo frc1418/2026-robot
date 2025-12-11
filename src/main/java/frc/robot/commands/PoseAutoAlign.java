@@ -4,6 +4,7 @@ import static frc.robot.Constants.driveD;
 import static frc.robot.Constants.driveP;
 import static frc.robot.Constants.rotD;
 import static frc.robot.Constants.rotP;
+import static frc.robot.subsystems.drive.DriveConstants.maxSpeedMetersPerSec;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -64,6 +65,12 @@ public class PoseAutoAlign extends Command {
             finished = true;
         }
         Logger.recordOutput("autoAlign/finished", finished);
+
+        double totalVel = Math.hypot(driveX, driveY);
+        if (totalVel > maxSpeedMetersPerSec) {
+            driveX *= maxSpeedMetersPerSec / totalVel;
+            driveY *= maxSpeedMetersPerSec / totalVel;
+        }
 
         ChassisSpeeds speeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             driveX,
