@@ -166,6 +166,7 @@ public class RobotContainer {
         );
 
         VictiPathBuilder.configure(
+            drive,
             drive::getPose,
             drive::runVelocity,
             new HolonomicPID(7.5, 0.0, 0.5, 5.0, 0.0, 0.0),
