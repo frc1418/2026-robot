@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.ATagAutoAlign;
 import frc.robot.commands.DefaultDriveCommands;
+//import frc.robot.commands.LLCoralIntake;
 //import frc.robot.commands.MultiPointPathFollower;
 import frc.robot.commands.PoseAutoAlign;
 import frc.robot.subsystems.drive.*;
@@ -234,6 +235,8 @@ public class RobotContainer {
                 ); // zero gyro
 
         rightJoystick.button(1).onTrue(Commands.runOnce(resetGyro));
+
+        //rightJoystick.button(2).whileTrue(new LLCoralIntake(drive, vision));
         /*
 
         // Lock to 0° when A button is held

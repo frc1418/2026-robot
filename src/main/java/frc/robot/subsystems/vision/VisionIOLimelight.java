@@ -21,6 +21,7 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.IntegerSubscriber;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
 import java.util.HashSet;
@@ -39,6 +40,7 @@ public class VisionIOLimelight implements VisionIO {
     private final IntegerSubscriber tidSubscriber;
     private final DoubleSubscriber txSubscriber;
     private final DoubleSubscriber tySubscriber;
+    private final NetworkTableEntry pipelineEntry;
     private final DoubleArraySubscriber megatag1Subscriber;
     private final DoubleArraySubscriber megatag2Subscriber;
 
@@ -60,6 +62,7 @@ public class VisionIOLimelight implements VisionIO {
         tidSubscriber = table.getIntegerTopic("tid").subscribe(-1);
         txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
         tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
+        pipelineEntry = table.getEntry("pipeline");
         megatag1Subscriber =
             table
                 .getDoubleArrayTopic("botpose_wpiblue")
@@ -165,6 +168,19 @@ public class VisionIOLimelight implements VisionIO {
         for (int id : tagIds) {
             inputs.tagIds[i++] = id;
         }
+    }
+
+    public TargetObservation getTarget() {
+        return new TargetObservation(
+            (int) tidSubscriber.get(),
+            Rotation2d.fromDegrees(txSubscriber.get()),
+            Rotation2d.fromDegrees(tySubscriber.get())
+        );
+    }
+
+    @Override
+    public void setPipeline(int pipeline) {
+        pipelineEntry.setNumber(pipeline);
     }
 
     /** Parses the 3D pose from a Limelight botpose array. */

@@ -48,4 +48,6 @@ public interface VisionIO {
     }
 
     default void updateInputs(VisionIOInputs inputs) {}
+
+    default void setPipeline(int pipeline) {}
 }

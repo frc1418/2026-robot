@@ -156,4 +156,9 @@ public class VisionIOPhotonVision implements VisionIO {
             inputs.tagIds[i++] = id;
         }
     }
+
+    @Override
+    public void setPipeline(int pipeline) {
+        camera.setPipelineIndex(pipeline);
+    }
 }
