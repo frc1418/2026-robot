@@ -185,49 +185,49 @@ createVersionFile.dependsOn(eventDeploy)
 def userHome = System.properties['user.home']
 
 // Spotless formatting
-project.compileJava.dependsOn(spotlessApply)
-spotless {
-    java {
-        target fileTree('.') {
-            include '**/*.java'
-            exclude '**/build/**', '**/build-*/**'
-        }
-        toggleOffOn()
-        prettier(['prettier': '2.8.8', 'prettier-plugin-java': '2.2.0'])
-        .config([
-            'parser': 'java',
-            'tabWidth': 4,
-            'trailingComma': 'none'
-        ])
-        .npmExecutable(userHome + "/.nvm/versions/node/v25.2.1/bin/npm")
-        .nodeExecutable(userHome + "/.nvm/versions/node/v25.2.1/bin/node")
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    groovyGradle {
-        target fileTree(".") {
-            include "**/*.gradle"
-            exclude "**/build/**", "**/build-*/**"
-        }
-        greclipse()
-        indentWithSpaces(4)
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    json {
-        target fileTree(".") {
-            include "**/*.json"
-            exclude "**/build/**", "**/build-*/**"
-        }
-        gson().indentWithSpaces(2)
-    }
-    format "misc", {
-        target fileTree(".") {
-            include "**/*.md", "**/.gitignore"
-            exclude "**/build/**", "**/build-*/**"
-        }
-        trimTrailingWhitespace()
-        indentWithSpaces(4)
-        endWithNewline()
-    }
-}
+// project.compileJava.dependsOn(spotlessApply)
+// spotless {
+//     java {
+//         target fileTree('.') {
+//             include '**/*.java'
+//             exclude '**/build/**', '**/build-*/**'
+//         }
+//         toggleOffOn()
+//         prettier(['prettier': '2.8.8', 'prettier-plugin-java': '2.2.0'])
+//         .config([
+//             'parser': 'java',
+//             'tabWidth': 4,
+//             'trailingComma': 'none'
+//         ])
+//         .npmExecutable(userHome + "/.nvm/versions/node/v25.2.1/bin/npm")
+//         .nodeExecutable(userHome + "/.nvm/versions/node/v25.2.1/bin/node")
+//         trimTrailingWhitespace()
+//         endWithNewline()
+//     }
+//     groovyGradle {
+//         target fileTree(".") {
+//             include "**/*.gradle"
+//             exclude "**/build/**", "**/build-*/**"
+//         }
+//         greclipse()
+//         indentWithSpaces(4)
+//         trimTrailingWhitespace()
+//         endWithNewline()
+//     }
+//     json {
+//         target fileTree(".") {
+//             include "**/*.json"
+//             exclude "**/build/**", "**/build-*/**"
+//         }
+//         gson().indentWithSpaces(2)
+//     }
+//     format "misc", {
+//         target fileTree(".") {
+//             include "**/*.md", "**/.gitignore"
+//             exclude "**/build/**", "**/build-*/**"
+//         }
+//         trimTrailingWhitespace()
+//         indentWithSpaces(4)
+//         endWithNewline()
+//     }
+// }

@@ -230,11 +230,14 @@ public class RobotContainer {
                 drive.resetOdometry(
                     new Pose2d(
                         drive.getPose().getTranslation(),
-                        new Rotation2d()
+                        new Rotation2d().plus(
+                            // add 90 degrees to account for physical gyro rotation
+                            Rotation2d.fromDegrees(90)
+                            )
                     )
                 ); // zero gyro
 
-        rightJoystick.button(1).onTrue(Commands.runOnce(resetGyro));
+        rightJoystick.button(2).onTrue(Commands.runOnce(resetGyro));
 
         //rightJoystick.button(2).whileTrue(new LLCoralIntake(drive, vision));
         /*
