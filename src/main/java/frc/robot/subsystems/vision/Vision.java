@@ -81,7 +81,7 @@ public class Vision extends SubsystemBase {
 
     /**
      * Sets the pipeline of the given camera
-     * 
+     *
      * @param cameraIndex The index of the camera to use
      * @param pipeline The pipeline to use
      */

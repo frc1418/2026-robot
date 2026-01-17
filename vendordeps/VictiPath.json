@@ -1,8 +1,8 @@
 {
   "fileName": "VictiPath.json",
   "name": "VictiPath",
-  "version": "0.0.1",
-  "frcYear": "2025",
+  "version": "0.1.0",
+  "frcYear": "2026",
   "uuid": "97df7325-6cf1-4bc6-9474-54c6f2b32da5",
   "mavenUrls": [
     "~/.m2"
@@ -12,14 +12,14 @@
     {
       "groupId": "team.vaevictis.victipath",
       "artifactId": "VictiPath-java",
-      "version": "0.0.1"
+      "version": "0.1.0"
     }
   ],
   "jniDependencies": [
     {
       "groupId": "team.vaevictis.victipath",
       "artifactId": "VictiPath-driver",
-      "version": "0.0.1",
+      "version": "0.1.0",
       "skipInvalidPlatforms": true,
       "isJar": false,
       "validPlatforms": [
@@ -36,7 +36,7 @@
     {
       "groupId": "team.vaevictis.victipath",
       "artifactId": "VictiPath-cpp",
-      "version": "0.0.1",
+      "version": "0.1.0",
       "libName": "Vendor",
       "headerClassifier": "headers",
       "sharedLibrary": false,
@@ -53,7 +53,7 @@
     {
       "groupId": "team.vaevictis.victipath",
       "artifactId": "VictiPath-driver",
-      "version": "0.0.1",
+      "version": "0.1.0",
       "libName": "VendorDriver",
       "headerClassifier": "headers",
       "sharedLibrary": false,
