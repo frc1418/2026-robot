@@ -26,12 +26,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.ATagAutoAlign;
-import frc.robot.commands.DefaultDriveCommands;
-//import frc.robot.commands.LLCoralIntake;
-//import frc.robot.commands.MultiPointPathFollower;
-import frc.robot.commands.PoseAutoAlign;
+import frc.robot.commands.Rebuilt;
+import frc.robot.commands.drive.DefaultDriveCommands;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperIO;
+import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIO;
+import frc.robot.subsystems.shooter.ShooterIOSim;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -50,8 +53,12 @@ public class RobotContainer {
 
     // Subsystems
     private final Drive drive;
+    @SuppressWarnings("unused")
     private final Vision vision;
+    private final Hopper hopper;
+    private final Shooter shooter;
     private SwerveDriveSimulation driveSimulation = null;
+    private HopperIOSim hopperSimulation = null;
 
     // Controller
     private final CommandJoystick leftJoystick = new CommandJoystick(0);
@@ -65,7 +72,7 @@ public class RobotContainer {
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                drive =
+                this.drive =
                     new Drive(
                         new GyroIONavX(),
                         new ModuleIOSpark(0),
@@ -83,6 +90,9 @@ public class RobotContainer {
                             drive::getRotation
                         )
                     );
+
+                this.hopper = null;
+                this.shooter = null;
                 break;
             case SIM:
                 // create a maple-sim swerve drive simulation instance
@@ -91,6 +101,9 @@ public class RobotContainer {
                         DriveConstants.mapleSimConfig,
                         new Pose2d(3, 3, new Rotation2d())
                     );
+
+                this.hopperSimulation = new HopperIOSim(this.driveSimulation);
+
                 // add the simulated drivetrain to the simulation field
                 SimulatedArena
                     .getInstance()
@@ -116,6 +129,13 @@ public class RobotContainer {
                         )
                     );
 
+                hopper = new Hopper(hopperSimulation);
+
+                shooter =
+                    new Shooter(
+                        new ShooterIOSim(driveSimulation, hopperSimulation)
+                    );
+
                 break;
             default:
                 // Replayed robot, disable IO implementations
@@ -130,6 +150,8 @@ public class RobotContainer {
                     );
                 vision =
                     new Vision(drive, new VisionIO() {}, new VisionIO() {});
+                hopper = new Hopper(new HopperIO() {});
+                shooter = new Shooter(new ShooterIO() {});
 
                 break;
         }
@@ -203,22 +225,37 @@ public class RobotContainer {
                 () -> -rightJoystick.getX()
             )
         );
+        hopper.setDefaultCommand(hopper.idle());
+        shooter.setDefaultCommand(shooter.running());
 
         leftJoystick
             .button(1)
-            .onTrue(new ATagAutoAlign(drive, vision, 17, 0.25, 0.5, 0.0));
-
-        leftJoystick
-            .button(2)
-            .onTrue(new PoseAutoAlign(drive, 2.720, 3.026, 1.0));
-
-        leftJoystick
-            .button(3)
-            .onTrue(
-                VictiPathBuilder.driveTo(
-                    new Pose2d(3.100, 4.026, Rotation2d.kZero)
+            .whileTrue(
+                Rebuilt.driveAlignedToHub(
+                    drive,
+                    () -> leftJoystick.getX(),
+                    () -> -leftJoystick.getY()
                 )
             );
+
+        leftJoystick.button(2).whileTrue(hopper.runIntake());
+        leftJoystick.button(3).whileTrue(hopper.runTransition());
+        leftJoystick
+            .button(4)
+            .onTrue(
+                VictiPathBuilder.driveTo(
+                    new Pose2d(8.230, 4.035, Rotation2d.k180deg)
+                )
+            );
+
+        /*leftJoystick
+            .button(3)
+            .onTrue(
+                Commands.deadline(
+                    Commands.waitSeconds(30),
+                    shooter.feedforwardCharacterization()
+                )
+            );*/
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
@@ -230,15 +267,15 @@ public class RobotContainer {
                 drive.resetOdometry(
                     new Pose2d(
                         drive.getPose().getTranslation(),
-                        new Rotation2d().plus(
-                            // add 90 degrees to account for physical gyro rotation
-                            Rotation2d.fromDegrees(90)
+                        new Rotation2d()
+                            .plus(
+                                // add 90 degrees to account for physical gyro rotation
+                                Rotation2d.fromDegrees(90)
                             )
                     )
                 ); // zero gyro
 
         rightJoystick.button(2).onTrue(Commands.runOnce(resetGyro));
-
         //rightJoystick.button(2).whileTrue(new LLCoralIntake(drive, vision));
         /*
 
@@ -288,12 +325,15 @@ public class RobotContainer {
             driveSimulation.getSimulatedDriveTrainPose()
         );
         Logger.recordOutput(
-            "FieldSimulation/Coral",
-            SimulatedArena.getInstance().getGamePiecesArrayByType("Coral")
+            "FieldSimulation/Fuel",
+            SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel")
         );
         Logger.recordOutput(
-            "FieldSimulation/Algae",
-            SimulatedArena.getInstance().getGamePiecesArrayByType("Algae")
+            "Odometry/OdoError",
+            driveSimulation
+                .getSimulatedDriveTrainPose()
+                .getTranslation()
+                .getDistance(drive.getPose().getTranslation())
         );
     }
 }

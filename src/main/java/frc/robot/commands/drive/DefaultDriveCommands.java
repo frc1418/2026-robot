@@ -11,7 +11,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.commands;
+package frc.robot.commands.drive;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -72,12 +72,12 @@ public class DefaultDriveCommands {
         DoubleSupplier ySupplier,
         DoubleSupplier omegaSupplier
     ) {
-        // this will not change; do not calculate in command
-        boolean isFlipped =
-            DriverStation.getAlliance().isPresent() &&
-            DriverStation.getAlliance().get() == Alliance.Red;
         return Commands.run(
             () -> {
+                boolean isFlipped =
+                    DriverStation.getAlliance().isPresent() &&
+                    DriverStation.getAlliance().get() == Alliance.Red;
+
                 // Get linear velocity
                 Translation2d linearVelocity = getLinearVelocityFromJoysticks(
                     xSupplier.getAsDouble(),
@@ -116,6 +116,51 @@ public class DefaultDriveCommands {
     }
 
     /**
+     * Field relative drive command using two joysticks (controlling linear and angular velocities).
+     */
+    public static Command joystickDriveWithAngularVelocity(
+        Drive drive,
+        DoubleSupplier xSupplier,
+        DoubleSupplier ySupplier,
+        DoubleSupplier omegaSupplier
+    ) {
+        return Commands.run(
+            () -> {
+                boolean isFlipped =
+                    DriverStation.getAlliance().isPresent() &&
+                    DriverStation.getAlliance().get() == Alliance.Red;
+
+                // Get linear velocity
+                Translation2d linearVelocity = getLinearVelocityFromJoysticks(
+                    xSupplier.getAsDouble(),
+                    ySupplier.getAsDouble()
+                );
+
+                double omega = omegaSupplier.getAsDouble();
+
+                // Convert to field relative speeds & send command
+                ChassisSpeeds speeds = new ChassisSpeeds(
+                    linearVelocity.getX() *
+                    drive.getMaxLinearSpeedMetersPerSec(),
+                    linearVelocity.getY() *
+                    drive.getMaxLinearSpeedMetersPerSec(),
+                    omega
+                );
+
+                speeds =
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        speeds,
+                        isFlipped
+                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                            : drive.getRotation()
+                    );
+                drive.runVelocity(speeds);
+            },
+            drive
+        );
+    }
+
+    /**
      * Field relative drive command using joystick for linear control and PID for angular control.
      * Possible use cases include snapping to an angle, aiming at a vision target, or controlling
      * absolute rotation with a joystick.
@@ -138,14 +183,14 @@ public class DefaultDriveCommands {
         );
         angleController.enableContinuousInput(-Math.PI, Math.PI);
 
-        boolean isFlipped =
-            DriverStation.getAlliance().isPresent() &&
-            DriverStation.getAlliance().get() == Alliance.Red;
-
         // Construct command
         return Commands
             .run(
                 () -> {
+                    boolean isFlipped =
+                        DriverStation.getAlliance().isPresent() &&
+                        DriverStation.getAlliance().get() == Alliance.Red;
+
                     // Get linear velocity
                     Translation2d linearVelocity =
                         getLinearVelocityFromJoysticks(
