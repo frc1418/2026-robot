@@ -5,29 +5,35 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import java.util.Queue;
 
 import com.reduxrobotics.sensors.canandgyro.Canandgyro;
+import com.reduxrobotics.sensors.canandgyro.CanandgyroSettings;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
 public class GyroIOBoron implements GyroIO {
 
-    private final Canandgyro boron = new Canandgyro(boronCanId);
+    private final Canandgyro boronGyro = new Canandgyro(boronCanId);
     private final Queue<Double> yawPositionQueue;
     private final Queue<Double> yawTimestampQueue;
 
     public GyroIOBoron() {
+        CanandgyroSettings settings = new CanandgyroSettings();
+        settings.setYawFramePeriod(1.0 / odometryFrequency);
+
+        boronGyro.setSettings(settings);
+
         yawTimestampQueue =
             SparkOdometryThread.getInstance().makeTimestampQueue();
         yawPositionQueue =
-            SparkOdometryThread.getInstance().registerSignal(boron::getYaw);
+            SparkOdometryThread.getInstance().registerSignal(boronGyro::getYaw);
     }
 
     @Override
     public void updateInputs(GyroIOInputs inputs) {
-        inputs.connected = boron.isConnected();
-        inputs.yawPosition = boron.getRotation2d();
+        inputs.connected = boronGyro.isConnected();
+        inputs.yawPosition = boronGyro.getRotation2d();
         inputs.yawVelocityRadPerSec =
-            Units.rotationsToRadians(boron.getAngularVelocityYaw());
+            Units.rotationsToRadians(boronGyro.getAngularVelocityYaw());
 
         inputs.odometryYawTimestamps =
             yawTimestampQueue
