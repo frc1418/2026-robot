@@ -27,7 +27,7 @@ robot
 │  │  └─ ModuleIOSim
 │  └─ gyro
 │     ├─ GyroIONavX
-│     ├─ GyroIOBoron        (TODO: ADD)
+│     ├─ GyroIOBoron
 │     └─ GyroIOSim
 └─ vision (x2)
    ├─ VisionIOLimelight
@@ -80,37 +80,37 @@ robot
   [DEFAULT] │  ├─ aprilTags
             │  └─ otherPipeline(id: int)
             │
-            ├─ shooting(x: double, y: double) -> 
-            │       shooter: hoodAimedAt(SOTM_HOOD_ANGLE), 
-            │       hopper: transitioning, 
+            ├─ shooting(x: double, y: double) ->
+            │       shooter: hoodAimedAt(SOTM_HOOD_ANGLE),
+            │       hopper: transitioning,
             │       drive: driving(x, y, SOTM_DRIVE_ANGLE),
             │       vision0: aprilTags,
             │       vision1: aprilTags
             │
-            ├─ manualShooting(x: double, y: double, Ω: double, hoodAngle: double) -> 
-            │       shooter: hoodAimedAt(hoodAngle), 
-            │       hopper: transitioning, 
+            ├─ manualShooting(x: double, y: double, Ω: double, hoodAngle: double) ->
+            │       shooter: hoodAimedAt(hoodAngle),
+            │       hopper: transitioning,
             │       drive: driving(x, y, Ω),
             │       vision0: aprilTags,
             │       vision1: aprilTags
             │
             ├─ intaking(x: double, y: double, Ω: double) ->
-            │       shooter: hoodIdled, 
-            │       hopper: intaking, 
+            │       shooter: hoodIdled,
+            │       hopper: intaking,
             │       drive: driving(x, y, Ω),
             │       vision0: aprilTags,
             │       vision1: aprilTags
             │
   [DEFAULT] ├─ driving(x: double, y: double, Ω: double) ->
-            │       shooter: hoodIdled, 
-            │       hopper: idled, 
+            │       shooter: hoodIdled,
+            │       hopper: idled,
             │       drive: driving(x, y, Ω),
             │       vision0: aprilTags,
             │       vision1: aprilTags
             │
             └─ climbing ->
-                    shooter: idled, 
-                    hopper: compacted, 
+                    shooter: idled,
+                    hopper: compacted,
                     drive: idled,
                     vision0: aprilTags,
                     vision1: aprilTags

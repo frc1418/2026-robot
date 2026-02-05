@@ -58,7 +58,7 @@ public class DriveConstants {
     );
 
     // Device CAN IDs
-    public static final int pigeonCanId = 9;
+    public static final int boronCanId = 9;
 
     public static final int frontLeftDriveCanId = 1;
     public static final int frontLeftTurnCanId = 2;
