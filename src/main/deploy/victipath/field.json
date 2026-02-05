@@ -89,7 +89,8 @@
     "links": [
       "upper_trench_left",
       "tower_top",
-      "tower_center"
+      "tower_center",
+      "depot"
     ]
   },
   "alliance_bottom": {
@@ -98,15 +99,17 @@
     "links": [
       "lower_trench_left",
       "tower_bottom",
-      "tower_center"
+      "tower_center",
+      "outpost"
     ]
   },
   "tower_top": {
-    "x": 1.597,
+    "x": 1.847,
     "y": 4.970,
     "links": [
       "alliance_top",
-      "tower_center"
+      "tower_center",
+      "depot"
     ]
   },
   "tower_center": {
@@ -120,11 +123,28 @@
     ]
   },
   "tower_bottom": {
-    "x": 1.597,
+    "x": 1.847,
     "y": 2.470,
     "links": [
       "alliance_bottom",
-      "tower_center"
+      "tower_center",
+      "outpost"
+    ]
+  },
+  "depot": {
+    "x": 0.75,
+    "y": 6.0,
+    "links": [
+      "tower_top",
+      "alliance_top"
+    ]
+  },
+  "outpost": {
+    "x": 0.75,
+    "y": 0.75,
+    "links": [
+      "tower_bottom",
+      "alliance_bottom"
     ]
   }
 }

@@ -20,4 +20,6 @@ public interface ShooterIO {
     public default double getRPM() {
         return 0.0;
     }
+
+    public default void setAngle(double angle) {}
 }

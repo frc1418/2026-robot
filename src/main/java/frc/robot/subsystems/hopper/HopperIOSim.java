@@ -56,7 +56,7 @@ public class HopperIOSim implements HopperIO {
     }
 
     public boolean transitionFuel() {
-        if (transitionTimer.hasElapsed(0.125) && this.isTransitionRunning) {
+        if (transitionTimer.hasElapsed(0.2) && this.isTransitionRunning) {
             transitionTimer.restart();
             return this.simulation.obtainGamePieceFromIntake();
         } else {

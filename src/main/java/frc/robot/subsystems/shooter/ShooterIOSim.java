@@ -52,6 +52,8 @@ public class ShooterIOSim implements ShooterIO {
     private SparkClosedLoopController flywheelMotorController =
         flywheelMotor.getClosedLoopController();
 
+    private double currentAngle = 60;
+
     public ShooterIOSim(
         AbstractDriveTrainSimulation driveSim,
         HopperIOSim hopperSim
@@ -86,6 +88,8 @@ public class ShooterIOSim implements ShooterIO {
         inputs.rpm = shooterSim.getAngularVelocityRPM();
         inputs.appliedVolts = shooterSim.getInputVoltage();
 
+        Logger.recordOutput("ShooterSim/Angle", currentAngle);
+
         if (inputs.rpm > 300.0) {
             if (hopperSim.transitionFuel()) {
                 Pose2d drivePose = driveSim.getSimulatedDriveTrainPose();
@@ -100,7 +104,7 @@ public class ShooterIOSim implements ShooterIO {
                     Inches.of(20),
                     // ≈17.5 m/s @ 4000 RPM
                     MetersPerSecond.of((inputs.rpm / 3000) * 8.0),
-                    Degrees.of(60)
+                    Degrees.of(currentAngle)
                 );
 
                 shotFuel.withTargetPosition(() ->
@@ -127,6 +131,13 @@ public class ShooterIOSim implements ShooterIO {
                     }
                 );
 
+                Logger.recordOutput(
+                    "ShooterSim/ShotDistance",
+                    drivePose
+                        .getTranslation()
+                        .getDistance(new Translation2d(4.5974, 4.03536))
+                );
+
                 shotFuel.enableBecomesGamePieceOnFieldAfterTouchGround();
 
                 SimulatedArena.getInstance().addGamePieceProjectile(shotFuel);
@@ -151,5 +162,17 @@ public class ShooterIOSim implements ShooterIO {
     @Override
     public double getRPM() {
         return shooterSim.getAngularVelocityRPM();
+    }
+
+    @Override
+    public void setAngle(double angle) {
+        // TODO: maybe a more accurate version of this?
+        // this just instantly sets hood angle
+        currentAngle = angle;
+        if (currentAngle > 80) {
+            currentAngle = 80;
+        } else if (currentAngle < 40) {
+            currentAngle = 40;
+        }
     }
 }

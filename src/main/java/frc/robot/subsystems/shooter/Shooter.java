@@ -2,6 +2,7 @@ package frc.robot.subsystems.shooter;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -13,6 +14,8 @@ public class Shooter extends SubsystemBase {
 
     private ShooterIO io;
     private ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
+
+    private double currentAngleSetpoint = 60;
 
     public Shooter(ShooterIO io) {
         this.io = io;
@@ -36,6 +39,20 @@ public class Shooter extends SubsystemBase {
                 io.setRPMTarget(0);
             })
             .andThen(idle());
+    }
+
+    public Command aimAt(double angle) {
+        return Commands.runOnce(() -> {
+            io.setAngle(angle);
+            currentAngleSetpoint = angle;
+        });
+    }
+
+    public Command changeAngle(double amountDegreesPerSecond) {
+        return Commands.run(() -> {
+            currentAngleSetpoint += amountDegreesPerSecond * 0.02;
+            io.setAngle(currentAngleSetpoint);
+        });
     }
 
     public Command feedforwardCharacterization() {

@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.Autos;
 import frc.robot.commands.Rebuilt;
 import frc.robot.commands.drive.DefaultDriveCommands;
 import frc.robot.subsystems.drive.*;
@@ -53,8 +54,10 @@ public class RobotContainer {
 
     // Subsystems
     private final Drive drive;
+
     @SuppressWarnings("unused")
     private final Vision vision;
+
     private final Hopper hopper;
     private final Shooter shooter;
     private SwerveDriveSimulation driveSimulation = null;
@@ -193,8 +196,9 @@ public class RobotContainer {
             drive,
             drive::getPose,
             drive::runVelocity,
-            new HolonomicPID(7.5, 0.0, 0.5, 5.0, 0.0, 0.0),
-            maxSpeedMetersPerSec
+            new HolonomicPID(5.0, 0.0, 0.0, 5.0, 0.0, 0.0),
+            maxSpeedMetersPerSec,
+            3.0
         );
 
         VictiPathBuilder.setLogging((Translation2d[] path) -> {
@@ -247,6 +251,11 @@ public class RobotContainer {
                     new Pose2d(8.230, 4.035, Rotation2d.k180deg)
                 )
             );
+        //leftJoystick.button(4).onTrue(Rebuilt.testHolonomicProfiler(drive));
+
+        rightJoystick.button(1).onTrue(shooter.aimAt(60));
+        rightJoystick.button(3).whileTrue(shooter.changeAngle(5));
+        rightJoystick.button(4).whileTrue(shooter.changeAngle(-5));
 
         /*leftJoystick
             .button(3)
@@ -256,6 +265,16 @@ public class RobotContainer {
                     shooter.feedforwardCharacterization()
                 )
             );*/
+
+        // 4.861, 50
+        // 4.643, 55
+        // 4.436, 60
+        // 3.948, 65
+        // 3.398, 70
+        // 3.193, 72.5
+        // 2.806, 75
+        // 2.392, 77.5
+        // 2.000, 80
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
@@ -306,7 +325,8 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoChooser.get();
+        //return Autos.secondAuto(drive, hopper, shooter);
+        return Autos.firstTestAuto(drive, hopper, shooter);
     }
 
     public void resetSimulationField() {
