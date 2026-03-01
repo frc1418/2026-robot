@@ -79,6 +79,16 @@ public class Vision extends SubsystemBase {
         return inputs[cameraIndex].latestTargetObservation;
     }
 
+    /**
+     * Sets the pipeline of the given camera
+     *
+     * @param cameraIndex The index of the camera to use
+     * @param pipeline The pipeline to use
+     */
+    public void setPipeline(int cameraIndex, int pipeline) {
+        io[cameraIndex].setPipeline(pipeline);
+    }
+
     @Override
     public void periodic() {
         for (int i = 0; i < io.length; i++) {

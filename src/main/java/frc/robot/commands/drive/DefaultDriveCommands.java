@@ -11,14 +11,12 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-package frc.robot.commands;
+package frc.robot.commands.drive;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -56,21 +54,13 @@ public class DefaultDriveCommands {
         double y
     ) {
         // Apply deadband
-        double linearMagnitude = MathUtil.applyDeadband(
-            Math.hypot(x, y),
-            DEADBAND
+        double magnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND);
+
+        // Return new linear velocity with square magnitude for better control
+        return new Translation2d(
+            magnitude * magnitude,
+            magnitude > 1e-6 ? new Rotation2d(x, y) : Rotation2d.kZero
         );
-        Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
-
-        // Square magnitude for more precise control
-        linearMagnitude = linearMagnitude * linearMagnitude;
-
-        // Return new linear velocity
-        return new Pose2d(new Translation2d(), linearDirection)
-            .transformBy(
-                new Transform2d(linearMagnitude, 0.0, new Rotation2d())
-            )
-            .getTranslation();
     }
 
     /**
@@ -84,6 +74,10 @@ public class DefaultDriveCommands {
     ) {
         return Commands.run(
             () -> {
+                boolean isFlipped =
+                    DriverStation.getAlliance().isPresent() &&
+                    DriverStation.getAlliance().get() == Alliance.Red;
+
                 // Get linear velocity
                 Translation2d linearVelocity = getLinearVelocityFromJoysticks(
                     xSupplier.getAsDouble(),
@@ -107,9 +101,52 @@ public class DefaultDriveCommands {
                     drive.getMaxLinearSpeedMetersPerSec(),
                     omega * drive.getMaxAngularSpeedRadPerSec()
                 );
+
+                speeds =
+                    ChassisSpeeds.fromFieldRelativeSpeeds(
+                        speeds,
+                        isFlipped
+                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                            : drive.getRotation()
+                    );
+                drive.runVelocity(speeds);
+            },
+            drive
+        );
+    }
+
+    /**
+     * Field relative drive command using two joysticks (controlling linear and angular velocities).
+     */
+    public static Command joystickDriveWithAngularVelocity(
+        Drive drive,
+        DoubleSupplier xSupplier,
+        DoubleSupplier ySupplier,
+        DoubleSupplier omegaSupplier
+    ) {
+        return Commands.run(
+            () -> {
                 boolean isFlipped =
                     DriverStation.getAlliance().isPresent() &&
                     DriverStation.getAlliance().get() == Alliance.Red;
+
+                // Get linear velocity
+                Translation2d linearVelocity = getLinearVelocityFromJoysticks(
+                    xSupplier.getAsDouble(),
+                    ySupplier.getAsDouble()
+                );
+
+                double omega = omegaSupplier.getAsDouble();
+
+                // Convert to field relative speeds & send command
+                ChassisSpeeds speeds = new ChassisSpeeds(
+                    linearVelocity.getX() *
+                    drive.getMaxLinearSpeedMetersPerSec(),
+                    linearVelocity.getY() *
+                    drive.getMaxLinearSpeedMetersPerSec(),
+                    omega
+                );
+
                 speeds =
                     ChassisSpeeds.fromFieldRelativeSpeeds(
                         speeds,
@@ -150,6 +187,10 @@ public class DefaultDriveCommands {
         return Commands
             .run(
                 () -> {
+                    boolean isFlipped =
+                        DriverStation.getAlliance().isPresent() &&
+                        DriverStation.getAlliance().get() == Alliance.Red;
+
                     // Get linear velocity
                     Translation2d linearVelocity =
                         getLinearVelocityFromJoysticks(
@@ -171,9 +212,6 @@ public class DefaultDriveCommands {
                         drive.getMaxLinearSpeedMetersPerSec(),
                         omega
                     );
-                    boolean isFlipped =
-                        DriverStation.getAlliance().isPresent() &&
-                        DriverStation.getAlliance().get() == Alliance.Red;
                     speeds =
                         ChassisSpeeds.fromFieldRelativeSpeeds(
                             speeds,

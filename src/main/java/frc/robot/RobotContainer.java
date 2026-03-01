@@ -13,24 +13,41 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.*;
+import static frc.robot.subsystems.drive.DriveConstants.maxSpeedMetersPerSec;
 import static frc.robot.subsystems.vision.VisionConstants.*;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.DefaultDriveCommands;
+import frc.robot.commands.Rebuilt;
+import frc.robot.commands.drive.DefaultDriveCommands;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.intake.IntakeIO;
+import frc.robot.subsystems.hopper.intake.IntakeIOSim;
+import frc.robot.subsystems.hopper.pivot.PivotIO;
+import frc.robot.subsystems.hopper.pivot.PivotIOSim;
+import frc.robot.subsystems.hopper.transition.TransitionIO;
+import frc.robot.subsystems.hopper.transition.TransitionIOSim;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIO;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import team.vaevictis.victipath.HolonomicPID;
+import team.vaevictis.victipath.VictiPathBuilder;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -42,7 +59,12 @@ public class RobotContainer {
 
     // Subsystems
     private final Drive drive;
+
+    @SuppressWarnings("unused")
     private final Vision vision;
+
+    private final Hopper hopper;
+    private final Shooter shooter;
     private SwerveDriveSimulation driveSimulation = null;
 
     // Controller
@@ -52,14 +74,14 @@ public class RobotContainer {
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
-    /** The container for the robot. Contains subsystems, OI devices, and commands. */
+    /** The container for the robot. Contains subsystems, IO devices, and commands. */
     public RobotContainer() {
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
-                drive =
+                this.drive =
                     new Drive(
-                        new GyroIONavX(),
+                        new GyroIOBoron(),
                         new ModuleIOSpark(0),
                         new ModuleIOSpark(1),
                         new ModuleIOSpark(2),
@@ -75,6 +97,9 @@ public class RobotContainer {
                             drive::getRotation
                         )
                     );
+
+                this.hopper = null;
+                this.shooter = null;
                 break;
             case SIM:
                 // create a maple-sim swerve drive simulation instance
@@ -83,6 +108,7 @@ public class RobotContainer {
                         DriveConstants.mapleSimConfig,
                         new Pose2d(3, 3, new Rotation2d())
                     );
+
                 // add the simulated drivetrain to the simulation field
                 SimulatedArena
                     .getInstance()
@@ -108,6 +134,20 @@ public class RobotContainer {
                         )
                     );
 
+                PivotIOSim pivot = new PivotIOSim();
+                IntakeIOSim intake = new IntakeIOSim(driveSimulation, pivot);
+                TransitionIOSim transition = new TransitionIOSim(intake, true);
+
+                HoodIOSim hood = new HoodIOSim();
+                FlywheelIOSim flywheel = new FlywheelIOSim(
+                    driveSimulation,
+                    hood,
+                    transition
+                );
+
+                hopper = new Hopper(intake, pivot, transition);
+                shooter = new Shooter(flywheel, hood);
+
                 break;
             default:
                 // Replayed robot, disable IO implementations
@@ -122,6 +162,13 @@ public class RobotContainer {
                     );
                 vision =
                     new Vision(drive, new VisionIO() {}, new VisionIO() {});
+                hopper =
+                    new Hopper(
+                        new IntakeIO() {},
+                        new PivotIO() {},
+                        new TransitionIO() {}
+                    );
+                shooter = new Shooter(new FlywheelIO() {}, new HoodIO() {});
 
                 break;
         }
@@ -159,6 +206,23 @@ public class RobotContainer {
             drive.sysIdDynamic(SysIdRoutine.Direction.kReverse)
         );
 
+        VictiPathBuilder.configure(
+            drive,
+            drive::getPose,
+            drive::runVelocity,
+            new HolonomicPID(5.0, 0.0, 0.0, 5.0, 0.0, 0.0),
+            maxSpeedMetersPerSec,
+            3.0
+        );
+
+        VictiPathBuilder.setLogging((Translation2d[] path) -> {
+            Pose2d[] poses = new Pose2d[path.length];
+            for (int i = 0; i < path.length; i++) {
+                poses[i] = new Pose2d(path[i], Rotation2d.kZero);
+            }
+            Logger.recordOutput("pathFollower/Path", poses);
+        });
+
         // Configure the button bindings
         configureButtonBindings();
     }
@@ -179,6 +243,63 @@ public class RobotContainer {
                 () -> -rightJoystick.getX()
             )
         );
+
+        leftJoystick
+            .button(1)
+            .whileTrue(
+                Rebuilt.driveAlignedToHub(
+                    drive,
+                    () -> leftJoystick.getX(),
+                    () -> -leftJoystick.getY()
+                )
+            );
+
+        leftJoystick.button(2).whileTrue(hopper.intaking());
+        leftJoystick.button(3).whileTrue(hopper.transitioning());
+
+        leftJoystick
+            .button(4)
+            .onTrue(
+                VictiPathBuilder.driveTo(
+                    new Pose2d(8.230, 4.035, Rotation2d.k180deg)
+                )
+            );
+        //leftJoystick.button(4).onTrue(Rebuilt.testHolonomicProfiler(drive));
+
+        rightJoystick.button(1).whileTrue(shooter.hoodAimed(() -> 60.0));
+
+        //rightJoystick.button(3).whileTrue(shooter.changeAngle(5));
+        //rightJoystick.button(4).whileTrue(shooter.changeAngle(-5));
+
+        /*leftJoystick
+            .button(3)
+            .onTrue(
+                Commands.deadline(
+                    Commands.waitSeconds(30),
+                    shooter.feedforwardCharacterization()
+                )
+            );*/
+
+        // Reset gyro / odometry
+        final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
+            ? () ->
+                drive.resetOdometry(
+                    driveSimulation.getSimulatedDriveTrainPose()
+                ) // reset odometry to actual robot pose during simulation
+            : () ->
+                drive.resetOdometry(
+                    new Pose2d(
+                        drive.getPose().getTranslation(),
+                        new Rotation2d()
+                            .plus(
+                                // add 90 degrees to account for physical gyro rotation
+                                Rotation2d.fromDegrees(90)
+                            )
+                    )
+                ); // zero gyro
+
+        rightJoystick.button(2).onTrue(Commands.runOnce(resetGyro));
+        //rightJoystick.button(2).whileTrue(new LLCoralIntake(drive, vision));
         /*
 
         // Lock to 0° when A button is held
@@ -208,7 +329,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoChooser.get();
+        return Commands.none();
     }
 
     public void resetSimulationField() {
@@ -227,12 +348,15 @@ public class RobotContainer {
             driveSimulation.getSimulatedDriveTrainPose()
         );
         Logger.recordOutput(
-            "FieldSimulation/Coral",
-            SimulatedArena.getInstance().getGamePiecesArrayByType("Coral")
+            "FieldSimulation/Fuel",
+            SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel")
         );
         Logger.recordOutput(
-            "FieldSimulation/Algae",
-            SimulatedArena.getInstance().getGamePiecesArrayByType("Algae")
+            "Odometry/OdoError",
+            driveSimulation
+                .getSimulatedDriveTrainPose()
+                .getTranslation()
+                .getDistance(drive.getPose().getTranslation())
         );
     }
 }

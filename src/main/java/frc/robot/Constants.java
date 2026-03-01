@@ -14,6 +14,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.RobotBase;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -37,4 +38,21 @@ public final class Constants {
         /** Replaying from a log file. */
         REPLAY
     }
+
+    public static LoggedNetworkNumber driveP = new LoggedNetworkNumber(
+        "/Tuning/driveP",
+        7.5
+    );
+    public static LoggedNetworkNumber driveD = new LoggedNetworkNumber(
+        "/Tuning/driveD",
+        0.5
+    );
+    public static LoggedNetworkNumber rotP = new LoggedNetworkNumber(
+        "/Tuning/rotP",
+        5.0
+    );
+    public static LoggedNetworkNumber rotD = new LoggedNetworkNumber(
+        "/Tuning/rotD",
+        0.0
+    );
 }
