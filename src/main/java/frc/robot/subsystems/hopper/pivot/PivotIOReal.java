@@ -1,6 +1,5 @@
 package frc.robot.subsystems.hopper.pivot;
 
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
