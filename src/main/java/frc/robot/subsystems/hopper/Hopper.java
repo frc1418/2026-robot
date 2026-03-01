@@ -1,42 +1,75 @@
 package frc.robot.subsystems.hopper;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.littletonrobotics.junction.Logger;
+import frc.robot.subsystems.hopper.intake.Intake;
+import frc.robot.subsystems.hopper.intake.IntakeIO;
+import frc.robot.subsystems.hopper.pivot.Pivot;
+import frc.robot.subsystems.hopper.pivot.PivotIO;
+import frc.robot.subsystems.hopper.transition.Transition;
+import frc.robot.subsystems.hopper.transition.TransitionIO;
 
 public class Hopper extends SubsystemBase {
 
-    private HopperIO io;
-    private HopperIOInputsAutoLogged inputs = new HopperIOInputsAutoLogged();
+    private Intake intake;
+    private Pivot pivot;
+    private Transition transition;
 
-    public Hopper(HopperIO io) {
-        this.io = io;
+    public Hopper(
+        IntakeIO intakeIO,
+        PivotIO pivotIO,
+        TransitionIO transitionIO
+    ) {
+        this.intake = new Intake(intakeIO);
+        this.pivot = new Pivot(pivotIO);
+        this.transition = new Transition(transitionIO);
+
+        this.setDefaultCommand(idled());
     }
 
-    @Override
-    public void periodic() {
-        this.io.updateInputs(inputs);
-        Logger.processInputs("Hopper", inputs);
+    public Command idled() {
+        return Commands
+            .parallel(idle(), intake.idled(), pivot.idled(), transition.idled())
+            .withName("Robot/Hopper/Idled");
     }
 
-    public Command runIntake() {
-        return run(() -> {
-            this.io.setIntakeRunning(true);
-            this.io.setTransitionRunning(false);
-        });
+    // public Command compacted() {
+    //     return Commands
+    //         .parallel(idle(), intake.idled(), pivot.up(), transition.idled())
+    //         .withName("Robot/Hopper/Compacted");
+    // }
+
+    public Command intaking() {
+        return Commands
+            .deadline(
+                Commands.waitUntil(pivot::isDown),
+                Commands.parallel(
+                    idle(),
+                    intake.idled(),
+                    pivot.down(),
+                    transition.idled()
+                )
+            )
+            .andThen(
+                Commands.parallel(
+                    idle(),
+                    intake.running(),
+                    pivot.down(),
+                    transition.idled()
+                )
+            )
+            .withName("Robot/Hopper/Intaking");
     }
 
-    public Command runTransition() {
-        return run(() -> {
-            this.io.setIntakeRunning(false);
-            this.io.setTransitionRunning(true);
-        });
-    }
-
-    public Command idle() {
-        return run(() -> {
-            this.io.setIntakeRunning(false);
-            this.io.setTransitionRunning(false);
-        });
+    public Command transitioning() {
+        return Commands
+            .parallel(
+                idle(),
+                intake.idled(),
+                pivot.down(),
+                transition.running()
+            )
+            .withName("Robot/Hopper/Transitioning");
     }
 }

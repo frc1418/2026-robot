@@ -58,16 +58,16 @@ public class DriveConstants {
     );
 
     // Device CAN IDs
-    public static final int boronCanId = 9;
+    public static final int boronCanId = 20;
 
     public static final int frontLeftDriveCanId = 1;
     public static final int frontLeftTurnCanId = 2;
-    public static final int frontRightDriveCanId = 7;
-    public static final int frontRightTurnCanId = 8;
     public static final int backLeftDriveCanId = 3;
     public static final int backLeftTurnCanId = 4;
     public static final int backRightDriveCanId = 5;
     public static final int backRightTurnCanId = 6;
+    public static final int frontRightDriveCanId = 7;
+    public static final int frontRightTurnCanId = 8;
 
     // Drive motor configuration
     public static final int driveMotorCurrentLimit = 30;

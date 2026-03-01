@@ -1,12 +1,15 @@
-package frc.robot.subsystems.shooter;
+package frc.robot.subsystems.shooter.flywheel;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static frc.robot.subsystems.shooter.ShooterConstants.*;
 
 import com.revrobotics.PersistMode;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.sim.SparkFlexSim;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
@@ -20,52 +23,57 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.FlywheelSim;
-import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.hopper.transition.TransitionIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 import org.ironmaple.simulation.seasonspecific.rebuilt2026.RebuiltFuelOnFly;
 import org.ironmaple.utils.FieldMirroringUtils;
 import org.littletonrobotics.junction.Logger;
 
-public class ShooterIOSim implements ShooterIO {
+public class FlywheelIOSim implements FlywheelIO {
 
-    private DCMotor flywheelGearbox = DCMotor.getNeoVortex(2);
+    private AbstractDriveTrainSimulation driveSim;
+    private HoodIOSim hoodSim;
+    private TransitionIOSim transitionSim;
+
     // 40s and higher are reserved for simulation devices
     private SparkFlex flywheelMotor = new SparkFlex(40, MotorType.kBrushless);
+    private RelativeEncoder flywheelEncoder = flywheelMotor.getEncoder();
+    private SparkClosedLoopController flywheelController =
+        flywheelMotor.getClosedLoopController();
+
+    private boolean isRunning = false;
+
+    private DCMotor flywheelGearbox = DCMotor.getNeoVortex(2);
     private SparkFlexSim flywheelMotorSim = new SparkFlexSim(
         flywheelMotor,
         flywheelGearbox
     );
-
     private FlywheelSim shooterSim = new FlywheelSim(
-        LinearSystemId.createFlywheelSystem(
-            flywheelGearbox,
-            0.00790829399,
-            1.0
-        ),
+        LinearSystemId.createFlywheelSystem(flywheelGearbox, 0.008, 1.0),
         flywheelGearbox
     );
 
-    private HopperIOSim hopperSim;
-    private AbstractDriveTrainSimulation driveSim;
-
-    private SparkClosedLoopController flywheelMotorController =
-        flywheelMotor.getClosedLoopController();
-
-    private double currentAngle = 60;
-
-    public ShooterIOSim(
+    public FlywheelIOSim(
         AbstractDriveTrainSimulation driveSim,
-        HopperIOSim hopperSim
+        HoodIOSim hoodSim,
+        TransitionIOSim transitionSim
     ) {
         this.driveSim = driveSim;
-        this.hopperSim = hopperSim;
+        this.hoodSim = hoodSim;
+        this.transitionSim = transitionSim;
 
         SparkFlexConfig flywheelMotorConfig = new SparkFlexConfig();
-        flywheelMotorConfig.smartCurrentLimit(50).idleMode(IdleMode.kCoast);
+        flywheelMotorConfig.smartCurrentLimit(40).idleMode(IdleMode.kCoast);
 
-        flywheelMotorConfig.closedLoop.p(0.005).i(0.0).d(0.0);
-        flywheelMotorConfig.closedLoop.feedForward.kS(0.149).kV(0.00174);
+        flywheelMotorConfig.closedLoop.pid(0.0015, 0.0, 0.0);
+        // flywheelMotorConfig.closedLoop.feedForward.sv(0.0149, 0.00174);
+        flywheelMotorConfig.closedLoop.feedForward.sva(0.0, 0.22, 2.69);
+
+        flywheelMotorConfig.closedLoop.maxMotion
+            .cruiseVelocity(3000)
+            .maxAcceleration(1500);
 
         flywheelMotor.configure(
             flywheelMotorConfig,
@@ -75,7 +83,7 @@ public class ShooterIOSim implements ShooterIO {
     }
 
     @Override
-    public void updateInputs(ShooterIOInputs inputs) {
+    public void updateInputs(FlywheelIOInputs inputs) {
         shooterSim.setInput(flywheelMotorSim.getAppliedOutput() * 12.0);
         shooterSim.update(0.02);
 
@@ -85,13 +93,33 @@ public class ShooterIOSim implements ShooterIO {
             0.02
         );
 
-        inputs.rpm = shooterSim.getAngularVelocityRPM();
+        // simple FF-based bang-bang controller if running
+        if (isRunning) {
+            flywheelController.setSetpoint(
+                targetRPM,
+                ControlType.kMAXMotionVelocityControl,
+                ClosedLoopSlot.kSlot0
+            );
+        } else {
+            flywheelController.setSetpoint(
+                0.0,
+                ControlType.kVelocity,
+                ClosedLoopSlot.kSlot0
+            );
+        }
+
+        Logger.recordOutput(
+            "Simulation/Flywheel/velocityRPM",
+            flywheelEncoder.getVelocity()
+        );
+
+        inputs.velocityRadPerSecond = shooterSim.getAngularVelocityRadPerSec();
         inputs.appliedVolts = shooterSim.getInputVoltage();
-
-        Logger.recordOutput("ShooterSim/Angle", currentAngle);
-
-        if (inputs.rpm > 300.0) {
-            if (hopperSim.transitionFuel()) {
+        inputs.currentAmps = shooterSim.getCurrentDrawAmps();
+        inputs.motorsConnected = true;
+        // 300 RPM
+        if (inputs.velocityRadPerSecond > 10.0 * Math.PI) {
+            if (transitionSim.transitionFuel()) {
                 Pose2d drivePose = driveSim.getSimulatedDriveTrainPose();
 
                 // shoot a fuel
@@ -102,9 +130,11 @@ public class ShooterIOSim implements ShooterIO {
                     driveSim.getDriveTrainSimulatedChassisSpeedsFieldRelative(),
                     drivePose.getRotation(),
                     Inches.of(20),
-                    // ≈17.5 m/s @ 4000 RPM
-                    MetersPerSecond.of((inputs.rpm / 3000) * 8.0),
-                    Degrees.of(currentAngle)
+                    // ≈10 m/s @ 3000 RPM
+                    MetersPerSecond.of(
+                        (inputs.velocityRadPerSecond / Math.PI / 100) * 10.0
+                    ),
+                    Degrees.of(hoodSim.getAngleDeg())
                 );
 
                 shotFuel.withTargetPosition(() ->
@@ -119,60 +149,47 @@ public class ShooterIOSim implements ShooterIO {
                 shotFuel.withProjectileTrajectoryDisplayCallBack(
                     locations -> {
                         Logger.recordOutput(
-                            "ShooterSim/SuccessfulShot",
+                            "Simulation/Shooter/SuccessfulShot",
                             locations.toArray(Pose3d[]::new)
                         );
                     },
                     locations -> {
                         Logger.recordOutput(
-                            "ShooterSim/UnsuccessfulShot",
+                            "Simulation/Shooter/UnsuccessfulShot",
                             locations.toArray(Pose3d[]::new)
                         );
                     }
                 );
 
                 Logger.recordOutput(
-                    "ShooterSim/ShotDistance",
+                    "Simulation/Shooter/ShotDistance",
                     drivePose
                         .getTranslation()
                         .getDistance(new Translation2d(4.5974, 4.03536))
                 );
 
-                shotFuel.enableBecomesGamePieceOnFieldAfterTouchGround();
+                if (transitionSim.isUnlimited()) {
+                    shotFuel.disableBecomesGamePieceOnFieldAfterTouchGround();
+                } else {
+                    shotFuel.enableBecomesGamePieceOnFieldAfterTouchGround();
+                }
 
                 SimulatedArena.getInstance().addGamePieceProjectile(shotFuel);
 
                 shooterSim.setAngularVelocity(
-                    shooterSim.getAngularVelocityRadPerSec() * 0.975
+                    shooterSim.getAngularVelocityRadPerSec() * 0.96375
                 );
             }
         }
     }
 
     @Override
-    public void setRPMTarget(double target) {
-        flywheelMotorController.setSetpoint(target, ControlType.kVelocity);
+    public void setIdled() {
+        isRunning = false;
     }
 
     @Override
-    public void setVolts(double volts) {
-        flywheelMotor.setVoltage(volts);
-    }
-
-    @Override
-    public double getRPM() {
-        return shooterSim.getAngularVelocityRPM();
-    }
-
-    @Override
-    public void setAngle(double angle) {
-        // TODO: maybe a more accurate version of this?
-        // this just instantly sets hood angle
-        currentAngle = angle;
-        if (currentAngle > 80) {
-            currentAngle = 80;
-        } else if (currentAngle < 40) {
-            currentAngle = 40;
-        }
+    public void setRunning() {
+        isRunning = true;
     }
 }

@@ -12,9 +12,9 @@ robot
 │  ├─ intake
 │  │  ├─ IntakeIOReal       (TODO: ADD)
 │  │  └─ IntakeIOSim        (TODO: REFACTOR)
-│  ├─ intakePivot
-│  │  ├─ IntakePivotIOReal  (TODO: ADD)
-│  │  └─ IntakePivotIOSim   (TODO: ADD)
+│  ├─ pivot
+│  │  ├─ pivotIOReal  (TODO: ADD)
+│  │  └─ pivotIOSim   (TODO: ADD)
 │  └─ transition
 │     ├─ TransistionIOReal  (TODO: ADD)
 │     └─ TransistionIOSim   (TODO: REFACTOR)
@@ -44,16 +44,16 @@ robot
   [DEFAULT] │  │  └─ running
             │  ├─ hood
   [DEFAULT] │  │  ├─ idled
-            │  │  └─ aimedAt(angle: double)
+            │  │  └─ aimed(angle: double)
             │  │
             │  ├─ idled -> flywheel: idled, hood: idled
   [DEFAULT] │  ├─ hoodIdled -> flywheel: running, hood: idled
-            │  └─ hoodAimedAt(angle: double) -> flywheel: running, hood: aimedAt(angle)
+            │  └─ hoodAimed(angle: double) -> flywheel: running, hood: aimed(angle)
             ├─ hopper
             │  ├─ intake
   [DEFAULT] │  │  ├─ idled
             │  │  └─ running
-            │  ├─ intakePivot
+            │  ├─ pivot
   [DEFAULT] │  │  ├─ idled
             │  │  ├─ up
             │  │  └─ down
@@ -61,10 +61,10 @@ robot
   [DEFAULT] │  │  ├─ idled
             │  │  └─ running
             │  │
-  [DEFAULT] │  ├─ idled -> intake: idled, intakePivot: idled, transition: idled
-            │  ├─ compacted -> intake: idled, intakePivot: up, transition: idled
-            │  ├─ intaking -> intake: running, intakePivot: down, transition: idled
-            │  └─ transitioning -> intake: idled, intakePivot: down, transition: running
+  [DEFAULT] │  ├─ idled -> intake: idled, pivot: idled, transition: idled
+            │  ├─ compacted -> intake: idled, pivot: up, transition: idled
+            │  ├─ intaking -> intake: pivot.down ? running : idled, pivot: down, transition: idled
+            │  └─ transitioning -> intake: idled, pivot: down, transition: running
             ├─ climber
   [DEFAULT] │  ├─ idled
             │  └─ climbing
@@ -81,14 +81,14 @@ robot
             │  └─ otherPipeline(id: int)
             │
             ├─ shooting(x: double, y: double) ->
-            │       shooter: hoodAimedAt(SOTM_HOOD_ANGLE),
-            │       hopper: transitioning,
+            │       shooter: hoodAimed(SOTM_HOOD_ANGLE),
+            │       hopper: SOTM_ABLE_TO_HIT ? transitioning : idled,
             │       drive: driving(x, y, SOTM_DRIVE_ANGLE),
             │       vision0: aprilTags,
             │       vision1: aprilTags
             │
             ├─ manualShooting(x: double, y: double, Ω: double, hoodAngle: double) ->
-            │       shooter: hoodAimedAt(hoodAngle),
+            │       shooter: hoodAimed(hoodAngle),
             │       hopper: transitioning,
             │       drive: driving(x, y, Ω),
             │       vision0: aprilTags,
@@ -115,6 +115,17 @@ robot
                     vision0: aprilTags,
                     vision1: aprilTags
 ```
+
+# CAN IDs
+1 - 8: Swerve [even steer, odd drive; FL, BL, BR, FR]
+9 - 11: Shooter [L Flywheel, R Flywheel, Hood]
+12, 13: Spindexer [Primary, Kicker]
+14, 15: Intake [Pivot, Intake]
+16: Climb
+17: (maybe temp) Intake Kicker
+20: Gyro
+
+NOTE: Shooter L Flywheel & Intake Intake need to be updated to 2026 firmware
 
 # AdvantageKit SparkMax Swerve Template with maple-sim
 

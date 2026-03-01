@@ -26,16 +26,21 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.commands.Autos;
 import frc.robot.commands.Rebuilt;
 import frc.robot.commands.drive.DefaultDriveCommands;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.hopper.Hopper;
-import frc.robot.subsystems.hopper.HopperIO;
-import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.hopper.intake.IntakeIO;
+import frc.robot.subsystems.hopper.intake.IntakeIOSim;
+import frc.robot.subsystems.hopper.pivot.PivotIO;
+import frc.robot.subsystems.hopper.pivot.PivotIOSim;
+import frc.robot.subsystems.hopper.transition.TransitionIO;
+import frc.robot.subsystems.hopper.transition.TransitionIOSim;
 import frc.robot.subsystems.shooter.Shooter;
-import frc.robot.subsystems.shooter.ShooterIO;
-import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.shooter.hood.HoodIO;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -61,7 +66,6 @@ public class RobotContainer {
     private final Hopper hopper;
     private final Shooter shooter;
     private SwerveDriveSimulation driveSimulation = null;
-    private HopperIOSim hopperSimulation = null;
 
     // Controller
     private final CommandJoystick leftJoystick = new CommandJoystick(0);
@@ -70,14 +74,14 @@ public class RobotContainer {
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
 
-    /** The container for the robot. Contains subsystems, OI devices, and commands. */
+    /** The container for the robot. Contains subsystems, IO devices, and commands. */
     public RobotContainer() {
         switch (Constants.currentMode) {
             case REAL:
                 // Real robot, instantiate hardware IO implementations
                 this.drive =
                     new Drive(
-                        new GyroIONavX(),
+                        new GyroIOBoron(),
                         new ModuleIOSpark(0),
                         new ModuleIOSpark(1),
                         new ModuleIOSpark(2),
@@ -105,8 +109,6 @@ public class RobotContainer {
                         new Pose2d(3, 3, new Rotation2d())
                     );
 
-                this.hopperSimulation = new HopperIOSim(this.driveSimulation);
-
                 // add the simulated drivetrain to the simulation field
                 SimulatedArena
                     .getInstance()
@@ -132,12 +134,19 @@ public class RobotContainer {
                         )
                     );
 
-                hopper = new Hopper(hopperSimulation);
+                PivotIOSim pivot = new PivotIOSim();
+                IntakeIOSim intake = new IntakeIOSim(driveSimulation, pivot);
+                TransitionIOSim transition = new TransitionIOSim(intake, true);
 
-                shooter =
-                    new Shooter(
-                        new ShooterIOSim(driveSimulation, hopperSimulation)
-                    );
+                HoodIOSim hood = new HoodIOSim();
+                FlywheelIOSim flywheel = new FlywheelIOSim(
+                    driveSimulation,
+                    hood,
+                    transition
+                );
+
+                hopper = new Hopper(intake, pivot, transition);
+                shooter = new Shooter(flywheel, hood);
 
                 break;
             default:
@@ -153,8 +162,13 @@ public class RobotContainer {
                     );
                 vision =
                     new Vision(drive, new VisionIO() {}, new VisionIO() {});
-                hopper = new Hopper(new HopperIO() {});
-                shooter = new Shooter(new ShooterIO() {});
+                hopper =
+                    new Hopper(
+                        new IntakeIO() {},
+                        new PivotIO() {},
+                        new TransitionIO() {}
+                    );
+                shooter = new Shooter(new FlywheelIO() {}, new HoodIO() {});
 
                 break;
         }
@@ -229,8 +243,6 @@ public class RobotContainer {
                 () -> -rightJoystick.getX()
             )
         );
-        hopper.setDefaultCommand(hopper.idle());
-        shooter.setDefaultCommand(shooter.running());
 
         leftJoystick
             .button(1)
@@ -242,8 +254,9 @@ public class RobotContainer {
                 )
             );
 
-        leftJoystick.button(2).whileTrue(hopper.runIntake());
-        leftJoystick.button(3).whileTrue(hopper.runTransition());
+        leftJoystick.button(2).whileTrue(hopper.intaking());
+        leftJoystick.button(3).whileTrue(hopper.transitioning());
+
         leftJoystick
             .button(4)
             .onTrue(
@@ -253,9 +266,10 @@ public class RobotContainer {
             );
         //leftJoystick.button(4).onTrue(Rebuilt.testHolonomicProfiler(drive));
 
-        rightJoystick.button(1).onTrue(shooter.aimAt(60));
-        rightJoystick.button(3).whileTrue(shooter.changeAngle(5));
-        rightJoystick.button(4).whileTrue(shooter.changeAngle(-5));
+        rightJoystick.button(1).whileTrue(shooter.hoodAimed(() -> 60.0));
+
+        //rightJoystick.button(3).whileTrue(shooter.changeAngle(5));
+        //rightJoystick.button(4).whileTrue(shooter.changeAngle(-5));
 
         /*leftJoystick
             .button(3)
@@ -265,16 +279,6 @@ public class RobotContainer {
                     shooter.feedforwardCharacterization()
                 )
             );*/
-
-        // 4.861, 50
-        // 4.643, 55
-        // 4.436, 60
-        // 3.948, 65
-        // 3.398, 70
-        // 3.193, 72.5
-        // 2.806, 75
-        // 2.392, 77.5
-        // 2.000, 80
 
         // Reset gyro / odometry
         final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
@@ -325,8 +329,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        //return Autos.secondAuto(drive, hopper, shooter);
-        return Autos.firstTestAuto(drive, hopper, shooter);
+        return Commands.none();
     }
 
     public void resetSimulationField() {
