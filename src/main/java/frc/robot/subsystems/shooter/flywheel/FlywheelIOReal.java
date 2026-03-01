@@ -1,7 +1,6 @@
+package frc.robot.subsystems.shooter.flywheel;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-
-import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 
 public class FlywheelIOReal implements FlywheelIO {
 
