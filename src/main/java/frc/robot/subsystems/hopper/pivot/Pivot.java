@@ -33,6 +33,14 @@ public class Pivot extends SubsystemBase {
             .withName("Robot/Hopper/IntakePivot/Idled");
     }
 
+    public Command wiggling() {
+        return runOnce(() -> {
+                io.setWiggling();
+            })
+            .andThen(idle())
+            .withName("Robot/Hopper/IntakePivot/Wiggling");
+    }
+
     public Command down() {
         return runOnce(() -> {
                 io.setDown();

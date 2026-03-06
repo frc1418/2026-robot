@@ -29,6 +29,14 @@ public class Intake extends SubsystemBase {
             .withName("Robot/Hopper/Intake/Idled");
     }
 
+    public Command slowRunning() {
+        return runOnce(() -> {
+                io.setRunningSlow();
+            })
+            .andThen(idle())
+            .withName("Robot/Hopper/Intake/Running");
+    }
+
     public Command running() {
         return runOnce(() -> {
                 io.setRunning();

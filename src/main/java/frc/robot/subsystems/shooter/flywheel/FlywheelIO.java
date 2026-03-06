@@ -18,4 +18,6 @@ public interface FlywheelIO {
     public default void setIdled() {}
 
     public default void setRunning() {}
+
+    public default void setVoltageForSysID(double voltage) {}
 }

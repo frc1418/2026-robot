@@ -125,6 +125,17 @@ robot
 17: (maybe temp) Intake Kicker
 20: Gyro
 
+# TODOs
+- Consistent Shooter RPM
+- PivotIOReal
+- HoodIOReal
+- FF characterization
+- Variable-distance shooting
+- SOTM
+
+# TODOs - DONE
+- Limelight locations on-robot
+
 NOTE: Shooter L Flywheel & Intake Intake need to be updated to 2026 firmware
 
 # AdvantageKit SparkMax Swerve Template with maple-sim

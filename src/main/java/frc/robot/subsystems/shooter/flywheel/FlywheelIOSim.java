@@ -44,6 +44,7 @@ public class FlywheelIOSim implements FlywheelIO {
         flywheelMotor.getClosedLoopController();
 
     private boolean isRunning = false;
+    private boolean isUsingVoltage = false;
 
     private DCMotor flywheelGearbox = DCMotor.getNeoVortex(2);
     private SparkFlexSim flywheelMotorSim = new SparkFlexSim(
@@ -67,13 +68,31 @@ public class FlywheelIOSim implements FlywheelIO {
         SparkFlexConfig flywheelMotorConfig = new SparkFlexConfig();
         flywheelMotorConfig.smartCurrentLimit(40).idleMode(IdleMode.kCoast);
 
-        flywheelMotorConfig.closedLoop.pid(0.0015, 0.0, 0.0);
-        // flywheelMotorConfig.closedLoop.feedForward.sv(0.0149, 0.00174);
-        flywheelMotorConfig.closedLoop.feedForward.sva(0.0, 0.22, 2.69);
+        flywheelMotorConfig.encoder.uvwMeasurementPeriod(8).uvwAverageDepth(2);
+        flywheelMotorConfig.encoder
+            .quadratureMeasurementPeriod(8)
+            .quadratureAverageDepth(2);
 
-        flywheelMotorConfig.closedLoop.maxMotion
-            .cruiseVelocity(3000)
-            .maxAcceleration(1500);
+        flywheelMotorConfig.closedLoop.pid(0.0075, 0.0, 0.0);
+        // flywheelMotorConfig.closedLoop.feedForward.sv(0.0149, 0.00174);
+        /*
+        ********** Flywheel FF Characterization Results **********
+        kS: 0.07924
+        kV: 0.00174
+        */
+        flywheelMotorConfig.closedLoop.feedForward.sv(0.07924, 0.00174);
+
+        flywheelMotorConfig.closedLoop.pid(
+            1.0,
+            0.0,
+            0.0,
+            ClosedLoopSlot.kSlot1
+        );
+        flywheelMotorConfig.closedLoop.feedForward.sv(
+            0.07924,
+            0.00174,
+            ClosedLoopSlot.kSlot1
+        );
 
         flywheelMotor.configure(
             flywheelMotorConfig,
@@ -94,18 +113,36 @@ public class FlywheelIOSim implements FlywheelIO {
         );
 
         // simple FF-based bang-bang controller if running
-        if (isRunning) {
-            flywheelController.setSetpoint(
-                targetRPM,
-                ControlType.kMAXMotionVelocityControl,
-                ClosedLoopSlot.kSlot0
-            );
-        } else {
-            flywheelController.setSetpoint(
-                0.0,
-                ControlType.kVelocity,
-                ClosedLoopSlot.kSlot0
-            );
+        if (!isUsingVoltage) {
+            if (isRunning) {
+                if (flywheelEncoder.getVelocity() < targetRPM * 0.9875) {
+                    flywheelController.setSetpoint(
+                        targetRPM,
+                        ControlType.kVelocity,
+                        ClosedLoopSlot.kSlot1
+                    );
+                } else {
+                    flywheelController.setSetpoint(
+                        targetRPM,
+                        ControlType.kVelocity,
+                        ClosedLoopSlot.kSlot0
+                    );
+                }
+                // double rpm = flywheelEncoder.getVelocity();
+                // double v =
+                //     -0.0598125 *
+                //     rpm /
+                //     (0.0598257819218 * rpm - 0.504667947581) +
+                //     0.0149;
+                // Logger.recordOutput("FlywheelVPA", v);
+                // flywheelMotor.setVoltage(v * 60);
+            } else {
+                flywheelController.setSetpoint(
+                    0.0,
+                    ControlType.kVelocity,
+                    ClosedLoopSlot.kSlot0
+                );
+            }
         }
 
         Logger.recordOutput(
@@ -177,7 +214,7 @@ public class FlywheelIOSim implements FlywheelIO {
                 SimulatedArena.getInstance().addGamePieceProjectile(shotFuel);
 
                 shooterSim.setAngularVelocity(
-                    shooterSim.getAngularVelocityRadPerSec() * 0.96375
+                    shooterSim.getAngularVelocityRadPerSec() * 0.987
                 );
             }
         }
@@ -185,11 +222,19 @@ public class FlywheelIOSim implements FlywheelIO {
 
     @Override
     public void setIdled() {
+        isUsingVoltage = false;
         isRunning = false;
     }
 
     @Override
     public void setRunning() {
+        isUsingVoltage = false;
         isRunning = true;
+    }
+
+    @Override
+    public void setVoltageForSysID(double voltage) {
+        isUsingVoltage = true;
+        flywheelMotor.setVoltage(voltage);
     }
 }

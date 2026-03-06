@@ -25,19 +25,27 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.Rebuilt;
 import frc.robot.commands.drive.DefaultDriveCommands;
+import frc.robot.subsystems.climb.Climb;
+import frc.robot.subsystems.climb.ClimbIO;
+import frc.robot.subsystems.climb.ClimbIOReal;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.intake.IntakeIO;
+import frc.robot.subsystems.hopper.intake.IntakeIOReal;
 import frc.robot.subsystems.hopper.intake.IntakeIOSim;
 import frc.robot.subsystems.hopper.pivot.PivotIO;
+import frc.robot.subsystems.hopper.pivot.PivotIOReal;
 import frc.robot.subsystems.hopper.pivot.PivotIOSim;
 import frc.robot.subsystems.hopper.transition.TransitionIO;
+import frc.robot.subsystems.hopper.transition.TransitionIOReal;
 import frc.robot.subsystems.hopper.transition.TransitionIOSim;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
+import frc.robot.subsystems.shooter.flywheel.FlywheelIOReal;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIO;
 import frc.robot.subsystems.shooter.hood.HoodIOSim;
@@ -65,14 +73,26 @@ public class RobotContainer {
 
     private final Hopper hopper;
     private final Shooter shooter;
+    private final Climb climber;
     private SwerveDriveSimulation driveSimulation = null;
 
     // Controller
     private final CommandJoystick leftJoystick = new CommandJoystick(0);
     private final CommandJoystick rightJoystick = new CommandJoystick(1);
+    private final CommandXboxController altController =
+        new CommandXboxController(2);
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
+
+    // 4.122723side, 1.75length, 3.668583up
+    // 13.5
+    // 9.377277side, 11.75length, 7.918583up
+
+    // 0.29845 forward, -0.2381828358 right, 0.2011320082 up
+    // pitch: 33
+
+    // shooter offset: x: 0.5207, y: 0.5334
 
     /** The container for the robot. Contains subsystems, IO devices, and commands. */
     public RobotContainer() {
@@ -98,8 +118,16 @@ public class RobotContainer {
                         )
                     );
 
-                this.hopper = null;
-                this.shooter = null;
+                this.shooter =
+                    new Shooter(new FlywheelIOReal(), new HoodIO() {});
+                this.hopper =
+                    new Hopper(
+                        new IntakeIOReal(),
+                        new PivotIOReal(),
+                        new TransitionIOReal(),
+                        this.shooter
+                    );
+                this.climber = new Climb(new ClimbIOReal());
                 break;
             case SIM:
                 // create a maple-sim swerve drive simulation instance
@@ -145,8 +173,9 @@ public class RobotContainer {
                     transition
                 );
 
-                hopper = new Hopper(intake, pivot, transition);
                 shooter = new Shooter(flywheel, hood);
+                hopper = new Hopper(intake, pivot, transition, shooter);
+                climber = null;
 
                 break;
             default:
@@ -162,13 +191,15 @@ public class RobotContainer {
                     );
                 vision =
                     new Vision(drive, new VisionIO() {}, new VisionIO() {});
+                shooter = new Shooter(new FlywheelIO() {}, new HoodIO() {});
                 hopper =
                     new Hopper(
                         new IntakeIO() {},
                         new PivotIO() {},
-                        new TransitionIO() {}
+                        new TransitionIO() {},
+                        shooter
                     );
-                shooter = new Shooter(new FlywheelIO() {}, new HoodIO() {});
+                climber = new Climb(new ClimbIO() {});
 
                 break;
         }
@@ -266,7 +297,14 @@ public class RobotContainer {
             );
         //leftJoystick.button(4).onTrue(Rebuilt.testHolonomicProfiler(drive));
 
-        rightJoystick.button(1).whileTrue(shooter.hoodAimed(() -> 60.0));
+        //rightJoystick.button(1).whileTrue(shooter.hoodAimed(() -> 60.0));
+
+        rightJoystick.button(1).whileTrue(shooter.runShooterFFSysID());
+
+        //rightJoystick.button(3).whileTrue(climber.climb());
+        //rightJoystick.button(4).whileTrue(climber.declimb());
+        altController.x().whileTrue(climber.climb());
+        altController.b().whileTrue(climber.declimb());
 
         //rightJoystick.button(3).whileTrue(shooter.changeAngle(5));
         //rightJoystick.button(4).whileTrue(shooter.changeAngle(-5));

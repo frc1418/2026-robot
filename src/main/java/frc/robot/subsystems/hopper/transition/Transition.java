@@ -2,6 +2,8 @@ package frc.robot.subsystems.hopper.transition;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterConstants;
 import org.littletonrobotics.junction.Logger;
 
 public class Transition extends SubsystemBase {
@@ -10,8 +12,11 @@ public class Transition extends SubsystemBase {
     private TransitionIOInputsAutoLogged inputs =
         new TransitionIOInputsAutoLogged();
 
-    public Transition(TransitionIO io) {
+    private Shooter shooter;
+
+    public Transition(TransitionIO io, Shooter shooter) {
         this.io = io;
+        this.shooter = shooter;
 
         this.setDefaultCommand(idled());
     }
@@ -32,10 +37,17 @@ public class Transition extends SubsystemBase {
     }
 
     public Command running() {
-        return runOnce(() -> {
+        return run(() -> {
+                // if (
+                //     true
+                //     //Math.abs(shooter.getRPM() - ShooterConstants.targetRPM) < 10
+                // ) {
+                //     io.setRunning();
+                // } else {
+                //     io.setIdled();
+                // }
                 io.setRunning();
             })
-            .andThen(idle())
             .withName("Robot/Hopper/Transition/Running");
     }
 }

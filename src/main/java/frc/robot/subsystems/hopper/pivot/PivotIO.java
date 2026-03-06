@@ -19,5 +19,7 @@ public interface PivotIO {
 
     public default void setIdled() {}
 
+    public default void setWiggling() {}
+
     public default void setDown() {}
 }

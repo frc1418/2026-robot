@@ -12,4 +12,10 @@ public interface ClimbIO {
     }
 
     public default void updateInputs(ClimbIOInputs inputs) {}
+
+    public default void idle() {}
+
+    public default void declimbALittle() {}
+
+    public default void climbALittle() {}
 }

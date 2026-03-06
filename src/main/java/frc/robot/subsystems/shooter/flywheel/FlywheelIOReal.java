@@ -1,18 +1,20 @@
 package frc.robot.subsystems.shooter.flywheel;
 
+import static frc.robot.subsystems.shooter.ShooterConstants.targetRPM;
 import static frc.robot.util.SparkUtil.*;
-
-import java.util.function.DoubleSupplier;
 
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
+import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.util.Units;
+import java.util.function.DoubleSupplier;
 
 public class FlywheelIOReal implements FlywheelIO {
 
@@ -20,41 +22,72 @@ public class FlywheelIOReal implements FlywheelIO {
     private SparkFlex rightFlywheel = new SparkFlex(10, MotorType.kBrushless);
 
     private RelativeEncoder flywheelEncoder = leftFlywheel.getEncoder();
+    private SparkClosedLoopController flywheelController =
+        leftFlywheel.getClosedLoopController();
 
-    public boolean isRunning = false;
+    private boolean isRunning = false;
+    private boolean isUsingVoltage = false;
 
     public FlywheelIOReal() {
-
         SparkFlexConfig leftConfig = new SparkFlexConfig();
         SparkFlexConfig rightConfig = new SparkFlexConfig();
 
         leftConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(60);
-        rightConfig.apply(leftConfig).inverted(true).follow(leftFlywheel);
+        leftConfig.closedLoop.pid(0.0075, 0, 0);
+        leftConfig.closedLoop.feedForward.sv(0.015, 0.002);
+        leftConfig.closedLoop.pid(0.0075, 0, 0, ClosedLoopSlot.kSlot1);
+        leftConfig.closedLoop.feedForward.sv(
+            0.015,
+            0.002,
+            ClosedLoopSlot.kSlot1
+        );
 
-        leftFlywheel.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        rightFlywheel.configure(rightConfig, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+        rightConfig.apply(leftConfig).follow(leftFlywheel, true);
 
+        leftFlywheel.configure(
+            leftConfig,
+            ResetMode.kResetSafeParameters,
+            PersistMode.kPersistParameters
+        );
+        rightFlywheel.configure(
+            rightConfig,
+            ResetMode.kNoResetSafeParameters,
+            PersistMode.kPersistParameters
+        );
     }
 
     @Override
     public void updateInputs(FlywheelIOInputs inputs) {
-
-        if(!isRunning) {
-            leftFlywheel.set(0.0);
-        } else if(flywheelEncoder.getVelocity() < 3000) {
-            leftFlywheel.set(1.0);
-        } else {
-            // FF = sv(0.0149, 0.00174) [values maybe need to be updated; calculated from sim rn]
-            // calculated % from ff 
-            // (0.0149 + 0.00174*3000)/12 = 0.436241667
-            // there's more static friction than in sim, so a tiny bit more to compensate
-            leftFlywheel.set(0.45);
+        if (!isUsingVoltage) {
+            if (isRunning) {
+                // if (flywheelEncoder.getVelocity() < targetRPM * 0.985) {
+                //     flywheelController.setSetpoint(
+                //         targetRPM,
+                //         ControlType.kVelocity,
+                //         ClosedLoopSlot.kSlot1
+                //     );
+                // } else {
+                //     flywheelController.setSetpoint(
+                //         targetRPM,
+                //         ControlType.kVelocity,
+                //         ClosedLoopSlot.kSlot0
+                //     );
+                // }
+                leftFlywheel.set(0.25);
+            } else {
+                flywheelController.setSetpoint(
+                    0,
+                    ControlType.kVelocity,
+                    ClosedLoopSlot.kSlot0
+                );
+            }
         }
-
         ifOk(
             leftFlywheel,
             flywheelEncoder::getVelocity,
-            value -> inputs.velocityRadPerSecond = Units.rotationsPerMinuteToRadiansPerSecond(value)
+            value ->
+                inputs.velocityRadPerSecond =
+                    Units.rotationsPerMinuteToRadiansPerSecond(value)
         );
         ifOk(
             leftFlywheel,
@@ -70,18 +103,23 @@ public class FlywheelIOReal implements FlywheelIO {
             value -> inputs.currentAmps = value
         );
         inputs.motorsConnected = !sparkStickyFault;
-
     }
 
     @Override
     public void setIdled() {
+        isUsingVoltage = false;
         isRunning = false;
     }
 
     @Override
     public void setRunning() {
+        isUsingVoltage = false;
         isRunning = true;
     }
 
-    
+    @Override
+    public void setVoltageForSysID(double voltage) {
+        isUsingVoltage = true;
+        leftFlywheel.setVoltage(voltage);
+    }
 }

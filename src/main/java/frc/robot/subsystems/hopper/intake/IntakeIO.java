@@ -16,5 +16,7 @@ public interface IntakeIO {
 
     public default void setIdled() {}
 
+    public default void setRunningSlow() {}
+
     public default void setRunning() {}
 }

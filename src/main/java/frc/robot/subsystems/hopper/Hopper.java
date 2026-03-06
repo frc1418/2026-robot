@@ -9,6 +9,7 @@ import frc.robot.subsystems.hopper.pivot.Pivot;
 import frc.robot.subsystems.hopper.pivot.PivotIO;
 import frc.robot.subsystems.hopper.transition.Transition;
 import frc.robot.subsystems.hopper.transition.TransitionIO;
+import frc.robot.subsystems.shooter.Shooter;
 
 public class Hopper extends SubsystemBase {
 
@@ -19,18 +20,19 @@ public class Hopper extends SubsystemBase {
     public Hopper(
         IntakeIO intakeIO,
         PivotIO pivotIO,
-        TransitionIO transitionIO
+        TransitionIO transitionIO,
+        Shooter shooter
     ) {
         this.intake = new Intake(intakeIO);
         this.pivot = new Pivot(pivotIO);
-        this.transition = new Transition(transitionIO);
+        this.transition = new Transition(transitionIO, shooter);
 
         this.setDefaultCommand(idled());
     }
 
     public Command idled() {
         return Commands
-            .parallel(idle(), intake.idled(), pivot.idled(), transition.idled())
+            .parallel(idle(), intake.idled(), pivot.down(), transition.idled())
             .withName("Robot/Hopper/Idled");
     }
 
@@ -41,23 +43,38 @@ public class Hopper extends SubsystemBase {
     // }
 
     public Command intaking() {
+        // return Commands
+        //     .deadline(
+        //         Commands.waitUntil(pivot::isDown),
+        //         Commands.parallel(
+        //             idle(),
+        //             intake.idled(),
+        //             //pivot.down(),
+        //             transition.idled()
+        //         )
+        //     )
+        //     .andThen(
+        //         Commands.parallel(
+        //             idle(),
+        //             intake.running(),
+        //             //pivot.down(),
+        //             transition.idled()
+        //         )
+        //     )
+        // return Commands
+        //     .parallel(
+        //         idle(),
+        //         intake.running(),
+        //         //pivot.down(),
+        //         transition.idled()
+        //     )
+        //     .withName("Robot/Hopper/Intaking");
         return Commands
-            .deadline(
-                Commands.waitUntil(pivot::isDown),
-                Commands.parallel(
-                    idle(),
-                    intake.idled(),
-                    pivot.down(),
-                    transition.idled()
-                )
-            )
-            .andThen(
-                Commands.parallel(
-                    idle(),
-                    intake.running(),
-                    pivot.down(),
-                    transition.idled()
-                )
+            .parallel(
+                idle(),
+                intake.running(),
+                pivot.down(),
+                transition.idled()
             )
             .withName("Robot/Hopper/Intaking");
     }
@@ -66,8 +83,8 @@ public class Hopper extends SubsystemBase {
         return Commands
             .parallel(
                 idle(),
-                intake.idled(),
-                pivot.down(),
+                intake.slowRunning(),
+                pivot.wiggling(),
                 transition.running()
             )
             .withName("Robot/Hopper/Transitioning");

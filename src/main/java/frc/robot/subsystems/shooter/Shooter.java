@@ -39,4 +39,16 @@ public class Shooter extends SubsystemBase {
             .parallel(idle(), flywheel.running(), hood.aimed(angleSupplier))
             .withName("Robot/Shooter/HoodAimed");
     }
+
+    public Command runShooterFFSysID() {
+        return Commands.parallel(
+            idle(),
+            flywheel.feedforwardCharacterization(),
+            hood.idled()
+        );
+    }
+
+    public double getRPM() {
+        return flywheel.getRPM();
+    }
 }
