@@ -39,21 +39,27 @@ public class Hood extends SubsystemBase {
             })
             .withName("Robot/Shooter/Hood/Aimed");
     }
-    
+
     public Command home() {
         return run(() -> {
-            io.setHoming(0.1); // change to positive if needed and maybe reduce/increase voltage (test ts)
-        }).beforeStarting(() -> {
-            io.prepareHoming();
-            stallTimer.reset();
-            stallTimer.start();
-        }).until(() -> {
-            return Math.abs(inputs.velocityRadPerSecond) < 0.5 && stallTimer.hasElapsed(0.3);
-        }).finallyDo((interrupted) -> {
-            io.setHoming(0.0);
-            io.resetHoming();
-            stallTimer.stop();
-        }).withName("Robot/Shooter/Hood/Homing");
+                io.setHoming(0.1); // change to positive if needed and maybe reduce/increase voltage (test ts)
+            })
+            .beforeStarting(() -> {
+                io.prepareHoming();
+                stallTimer.reset();
+                stallTimer.start();
+            })
+            .until(() -> {
+                return (
+                    Math.abs(inputs.velocityRadPerSecond) < 0.5 &&
+                    stallTimer.hasElapsed(0.3)
+                );
+            })
+            .finallyDo(interrupted -> {
+                io.setHoming(0.0);
+                io.resetHoming();
+                stallTimer.stop();
+            })
+            .withName("Robot/Shooter/Hood/Homing");
     }
-
 }

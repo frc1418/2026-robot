@@ -25,5 +25,4 @@ public interface HoodIO {
     public default void setHoming(double volts) {}
 
     public default void resetHoming() {}
-
 }

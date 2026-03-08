@@ -39,8 +39,7 @@ public class Transition extends SubsystemBase {
     public Command running() {
         return run(() -> {
                 // if (
-                //     true
-                //     //Math.abs(shooter.getRPM() - ShooterConstants.targetRPM) < 10
+                //     Math.abs(shooter.getRPM() - ShooterConstants.targetRPM) < 30
                 // ) {
                 //     io.setRunning();
                 // } else {

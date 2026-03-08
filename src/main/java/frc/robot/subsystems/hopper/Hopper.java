@@ -32,7 +32,7 @@ public class Hopper extends SubsystemBase {
 
     public Command idled() {
         return Commands
-            .parallel(idle(), intake.idled(), pivot.down(), transition.idled())
+            .parallel(idle(), intake.idled(), pivot.idled(), transition.idled())
             .withName("Robot/Hopper/Idled");
     }
 
@@ -73,7 +73,7 @@ public class Hopper extends SubsystemBase {
             .parallel(
                 idle(),
                 intake.running(),
-                pivot.down(),
+                pivot.idled(),
                 transition.idled()
             )
             .withName("Robot/Hopper/Intaking");
@@ -84,7 +84,7 @@ public class Hopper extends SubsystemBase {
             .parallel(
                 idle(),
                 intake.slowRunning(),
-                pivot.wiggling(),
+                pivot.idled(),
                 transition.running()
             )
             .withName("Robot/Hopper/Transitioning");
