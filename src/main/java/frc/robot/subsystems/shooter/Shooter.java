@@ -40,11 +40,11 @@ public class Shooter extends SubsystemBase {
             .withName("Robot/Shooter/HoodAimed");
     }
 
-    public Command hoodHome() {
-        return Commands
-            .parallel(idle(), flywheel.running(), hood.home())
-            .withName("Robot/Shooter/HoodHome");
-    }
+    // public Command hoodHome() {
+    //     return Commands
+    //         .parallel(idle(), flywheel.running(), hood.home())
+    //         .withName("Robot/Shooter/HoodHome");
+    // }
 
     public Command runShooterFFSysID() {
         return Commands.parallel(

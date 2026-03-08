@@ -7,10 +7,12 @@ public interface HoodIO {
     public static class HoodIOInputs {
 
         public boolean motorConnected;
-        public double angleRad;
         public double velocityRadPerSecond;
         public double appliedVolts;
         public double currentAmps;
+        public double inputAngle;
+        public double outputAngle;
+
     }
 
     /** Updates the set of loggable inputs. */
@@ -20,10 +22,10 @@ public interface HoodIO {
 
     public default void setAimed(double angle) {}
 
-    public default void prepareHoming() {}
+    // public default void prepareHoming() {}
 
-    public default void setHoming(double volts) {}
+    // public default void setHoming(double volts) {}
 
-    public default void resetHoming() {}
+    // public default void resetHoming() {}
 
 }

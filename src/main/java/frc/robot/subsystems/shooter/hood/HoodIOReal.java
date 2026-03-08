@@ -51,10 +51,11 @@ public class HoodIOReal implements HoodIO {
     @Override
     public void updateInputs(HoodIOInputs inputs) {
         inputs.motorConnected = hoodMotor.getBusVoltage() > 0.0;
-        inputs.angleRad = hoodEncoder.getPosition();
         inputs.velocityRadPerSecond = hoodEncoder.getVelocity();
         inputs.appliedVolts = hoodMotor.getAppliedOutput() * hoodMotor.getBusVoltage();
         inputs.currentAmps = hoodMotor.getOutputCurrent();
+        inputs.inputAngle = hoodController.getSetpoint();
+        inputs.outputAngle = hoodEncoder.getPosition();
     }
 
     @Override
@@ -66,23 +67,22 @@ public class HoodIOReal implements HoodIO {
     @Override
     public void setAimed(double angleRad) {
         hoodController.setSetpoint(-angleRad, ControlType.kPosition);
-        // hoodMotor.set(-0.25);
     }
 
-    @Override
-    public void prepareHoming() {
-        hoodMotor.configure(homingConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-    }
+    // @Override
+    // public void prepareHoming() {
+    //     hoodMotor.configure(homingConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    // }
 
-    @Override
-    public void setHoming(double volts) {
-        hoodMotor.set(volts);
-    }
+    // @Override
+    // public void setHoming(double volts) {
+    //     hoodMotor.set(volts);
+    // }
 
-    @Override
-    public void resetHoming() {
-        hoodMotor.configure(hoodConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        hoodEncoder.setPosition(0.0);
-    }
+    // @Override
+    // public void resetHoming() {
+    //     hoodMotor.configure(hoodConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+    //     hoodEncoder.setPosition(0.0);
+    // }
 
 }
