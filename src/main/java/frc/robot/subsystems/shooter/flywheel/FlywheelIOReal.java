@@ -33,12 +33,12 @@ public class FlywheelIOReal implements FlywheelIO {
         SparkFlexConfig rightConfig = new SparkFlexConfig();
 
         leftConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(60);
-        leftConfig.closedLoop.pid(0.0075, 0, 0);
-        leftConfig.closedLoop.feedForward.sv(0.015, 0.002);
-        leftConfig.closedLoop.pid(0.0075, 0, 0, ClosedLoopSlot.kSlot1);
+        leftConfig.closedLoop.pid(0.0004, 0, 0);
+        leftConfig.closedLoop.feedForward.sv(0.22560, 0.00183);
+        leftConfig.closedLoop.pid(0.0004, 0, 0, ClosedLoopSlot.kSlot1);
         leftConfig.closedLoop.feedForward.sv(
-            0.015,
-            0.002,
+            0.22560,
+            0.00183,
             ClosedLoopSlot.kSlot1
         );
 
@@ -67,19 +67,15 @@ public class FlywheelIOReal implements FlywheelIO {
                 //         ClosedLoopSlot.kSlot1
                 //     );
                 // } else {
-                //     flywheelController.setSetpoint(
-                //         targetRPM,
-                //         ControlType.kVelocity,
-                //         ClosedLoopSlot.kSlot0
-                //     );
-                // }
-                leftFlywheel.set(0.25);
-            } else {
                 flywheelController.setSetpoint(
-                    0,
+                    targetRPM,
                     ControlType.kVelocity,
                     ClosedLoopSlot.kSlot0
                 );
+                // }
+                //leftFlywheel.set(0.0);
+            } else {
+                leftFlywheel.set(0.0);
             }
         }
         ifOk(

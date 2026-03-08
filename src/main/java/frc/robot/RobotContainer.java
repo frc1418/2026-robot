@@ -48,8 +48,8 @@ import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOReal;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIO;
-import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.shooter.hood.HoodIOReal;
+import frc.robot.subsystems.shooter.hood.HoodIOSim;
 import frc.robot.subsystems.vision.*;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -120,10 +120,7 @@ public class RobotContainer {
                     );
 
                 this.shooter =
-                    new Shooter(
-                        new FlywheelIOReal(),
-                        new HoodIOReal() {}
-                    );
+                    new Shooter(new FlywheelIOReal(), new HoodIOReal() {});
                 this.hopper =
                     new Hopper(
                         new IntakeIOReal(),
@@ -246,8 +243,8 @@ public class RobotContainer {
             drive::getPose,
             drive::runVelocity,
             new HolonomicPID(5.0, 0.0, 0.0, 5.0, 0.0, 0.0),
-            maxSpeedMetersPerSec//,
-            // 3.0
+            maxSpeedMetersPerSec,
+            3.0
         );
 
         VictiPathBuilder.setLogging((Translation2d[] path) -> {
@@ -341,7 +338,6 @@ public class RobotContainer {
                 ); // zero gyro
 
         rightJoystick.button(2).onTrue(Commands.runOnce(resetGyro));
-
         // rightJoystick.button(5).onTrue(
         //     Commands.runOnce(() -> { shooter.hoodAimed(() -> 0.0).schedule(); })
         // );
@@ -353,14 +349,13 @@ public class RobotContainer {
         //     Commands.runOnce(() -> { shooter.hoodAimed(() -> 1.0).schedule(); })
         // );
 
-        shooter.setDefaultCommand(
-            shooter.hoodAimed(() -> {
-                double rawAxis = rightJoystick.getRawAxis(3);
-                double sliderValue = (-rawAxis + 1.0) * 0.5; 
-                return sliderValue;
-            })
-        );
-
+        // shooter.setDefaultCommand(
+        //     shooter.hoodAimed(() -> {
+        //         double rawAxis = rightJoystick.getRawAxis(3);
+        //         double sliderValue = (-rawAxis + 1.0) * 0.5;
+        //         return sliderValue;
+        //     })
+        // );
         // rightJoystick.button(8).onTrue(shooter.hoodHome());
 
         //rightJoystick.button(2).whileTrue(new LLCoralIntake(drive, vision));

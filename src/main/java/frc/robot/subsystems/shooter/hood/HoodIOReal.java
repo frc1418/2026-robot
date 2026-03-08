@@ -5,8 +5,8 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
@@ -18,11 +18,11 @@ public class HoodIOReal implements HoodIO {
 
     private SparkMax hoodMotor = new SparkMax(11, MotorType.kBrushless);
     private RelativeEncoder hoodEncoder = hoodMotor.getEncoder();
-    private SparkClosedLoopController hoodController = hoodMotor.getClosedLoopController();
+    private SparkClosedLoopController hoodController =
+        hoodMotor.getClosedLoopController();
 
     SparkMaxConfig hoodConfig = new SparkMaxConfig();
     SparkMaxConfig homingConfig = new SparkMaxConfig();
-
 
     public HoodIOReal() {
         hoodConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20);
@@ -31,14 +31,11 @@ public class HoodIOReal implements HoodIO {
             .positionConversionFactor(rotsToRads)
             .velocityConversionFactor(rotsToRads / 60.0);
 
-        hoodConfig.closedLoop
-            .pid(0.8, 0, 0)
-            .outputRange(-1.0, 1.0);
-
+        hoodConfig.closedLoop.pid(0.8, 0, 0).outputRange(-1.0, 1.0);
 
         homingConfig.apply(hoodConfig);
         homingConfig.smartCurrentLimit(5);
-        
+
         hoodMotor.configure(
             hoodConfig,
             ResetMode.kResetSafeParameters,
@@ -52,7 +49,8 @@ public class HoodIOReal implements HoodIO {
     public void updateInputs(HoodIOInputs inputs) {
         inputs.motorConnected = hoodMotor.getBusVoltage() > 0.0;
         inputs.velocityRadPerSecond = hoodEncoder.getVelocity();
-        inputs.appliedVolts = hoodMotor.getAppliedOutput() * hoodMotor.getBusVoltage();
+        inputs.appliedVolts =
+            hoodMotor.getAppliedOutput() * hoodMotor.getBusVoltage();
         inputs.currentAmps = hoodMotor.getOutputCurrent();
         inputs.inputAngle = hoodController.getSetpoint();
         inputs.outputAngle = hoodEncoder.getPosition();
