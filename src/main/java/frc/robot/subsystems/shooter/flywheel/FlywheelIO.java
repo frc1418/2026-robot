@@ -19,5 +19,7 @@ public interface FlywheelIO {
 
     public default void setRunning() {}
 
+    public default void setUnsticking() {}
+
     public default void setVoltageForSysID(double voltage) {}
 }

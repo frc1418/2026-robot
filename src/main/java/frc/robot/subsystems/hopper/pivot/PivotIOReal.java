@@ -72,6 +72,8 @@ public class PivotIOReal implements PivotIO {
                 pivotEncoder.getVelocity()
             );
 
+        inputs.motorConnected = true;
+
         switch (currentState) {
             case IDLED:
                 pivotMotor.set(0.0);

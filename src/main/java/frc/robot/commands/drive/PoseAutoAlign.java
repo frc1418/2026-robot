@@ -89,4 +89,10 @@ public class PoseAutoAlign extends Command {
     public boolean isFinished() {
         return finished;
     }
+
+    public void setNewTarget(double posX, double posZ, double rot) {
+        this.posX = posX;
+        this.posZ = posZ;
+        this.rot = rot;
+    }
 }

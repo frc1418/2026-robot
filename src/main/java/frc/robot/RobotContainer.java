@@ -116,6 +116,10 @@ public class RobotContainer {
                         new VisionIOLimelight(
                             VisionConstants.camera0Name,
                             drive::getRotation
+                        ),
+                        new VisionIOLimelight(
+                            VisionConstants.camera1Name,
+                            drive::getRotation
                         )
                     );
 
@@ -125,8 +129,7 @@ public class RobotContainer {
                     new Hopper(
                         new IntakeIOReal(),
                         new PivotIOReal(),
-                        new TransitionIOReal(),
-                        this.shooter
+                        new TransitionIOReal()
                     );
                 this.climber = new Climb(new ClimbIOReal());
                 break;
@@ -175,8 +178,8 @@ public class RobotContainer {
                 );
 
                 shooter = new Shooter(flywheel, hood);
-                hopper = new Hopper(intake, pivot, transition, shooter);
-                climber = null;
+                hopper = new Hopper(intake, pivot, transition);
+                climber = new Climb(new ClimbIO() {});
 
                 break;
             default:
@@ -197,8 +200,7 @@ public class RobotContainer {
                     new Hopper(
                         new IntakeIO() {},
                         new PivotIO() {},
-                        new TransitionIO() {},
-                        shooter
+                        new TransitionIO() {}
                     );
                 climber = new Climb(new ClimbIO() {});
 
@@ -270,37 +272,57 @@ public class RobotContainer {
         drive.setDefaultCommand(
             DefaultDriveCommands.joystickDrive(
                 drive,
-                () -> leftJoystick.getX(),
                 () -> -leftJoystick.getY(),
+                () -> -leftJoystick.getX(),
                 () -> -rightJoystick.getX()
             )
         );
 
+        // leftJoystick
+        //     .button(1)
+        //     .whileTrue(
+        //         Commands.parallel(
+        //             Rebuilt.driveAlignedToHub(
+        //                 drive,
+        //                 () -> -leftJoystick.getY(),
+        //                 () -> -leftJoystick.getX()
+        //             )
+        //             //hopper.transitioning()
+        //         )
+        //     );
+
         leftJoystick
             .button(1)
             .whileTrue(
-                Rebuilt.driveAlignedToHub(
-                    drive,
-                    () -> leftJoystick.getX(),
-                    () -> -leftJoystick.getY()
-                )
+                shooter.hoodAimed(() -> {
+                    Logger.recordOutput(
+                        "HubDistance",
+                        new Translation2d(11.938, 4.034536)
+                            .getDistance(drive.getPose().getTranslation())
+                    );
+                    return leftJoystick.getThrottle() * -0.25 + 0.25;
+                })
             );
 
         leftJoystick.button(2).whileTrue(hopper.intaking());
         leftJoystick.button(3).whileTrue(hopper.transitioning());
 
-        leftJoystick
-            .button(4)
-            .onTrue(
-                VictiPathBuilder.driveTo(
-                    new Pose2d(8.230, 4.035, Rotation2d.k180deg)
-                )
-            );
+        rightJoystick.button(1).whileTrue(Rebuilt.moveToTestingPosition(drive));
+        rightJoystick.button(3).onTrue(Rebuilt.resetTestingDistance());
+        rightJoystick.button(4).onTrue(Rebuilt.increaseTestingDistance());
+
+        // leftJoystick
+        //     .button(4)
+        //     .onTrue(
+        //         VictiPathBuilder.driveTo(
+        //             new Pose2d(8.230, 4.035, Rotation2d.k180deg)
+        //         )
+        //     );
         //leftJoystick.button(4).onTrue(Rebuilt.testHolonomicProfiler(drive));
 
         //rightJoystick.button(1).whileTrue(shooter.hoodAimed(() -> 60.0));
 
-        rightJoystick.button(1).whileTrue(shooter.runShooterFFSysID());
+        // rightJoystick.button(1).whileTrue(shooter.runShooterFFSysID());
 
         //rightJoystick.button(3).whileTrue(climber.climb());
         //rightJoystick.button(4).whileTrue(climber.declimb());
@@ -329,11 +351,7 @@ public class RobotContainer {
                 drive.resetOdometry(
                     new Pose2d(
                         drive.getPose().getTranslation(),
-                        new Rotation2d()
-                            .plus(
-                                // add 90 degrees to account for physical gyro rotation
-                                Rotation2d.fromDegrees(90)
-                            )
+                        Rotation2d.k180deg
                     )
                 ); // zero gyro
 

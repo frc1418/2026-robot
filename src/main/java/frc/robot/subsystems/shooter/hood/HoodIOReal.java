@@ -14,7 +14,7 @@ public class HoodIOReal implements HoodIO {
 
     // private final double GEAR_RATIO = 9 * (184.0 / 14.0); // 9:1 from motor to output shaft, then 184 teeth to 14 teeth
     private final double GEAR_RATIO = 9.0 * (184.0 / 14.0);
-    private final double rotsToRads = (2 * Math.PI / GEAR_RATIO) * 1.85;
+    private final double rotsToRads = (2 * Math.PI / GEAR_RATIO);
 
     private SparkMax hoodMotor = new SparkMax(11, MotorType.kBrushless);
     private RelativeEncoder hoodEncoder = hoodMotor.getEncoder();
@@ -22,19 +22,18 @@ public class HoodIOReal implements HoodIO {
         hoodMotor.getClosedLoopController();
 
     SparkMaxConfig hoodConfig = new SparkMaxConfig();
-    SparkMaxConfig homingConfig = new SparkMaxConfig();
 
     public HoodIOReal() {
-        hoodConfig.idleMode(IdleMode.kBrake).smartCurrentLimit(20);
+        hoodConfig
+            .idleMode(IdleMode.kBrake)
+            .smartCurrentLimit(30)
+            .inverted(true);
 
         hoodConfig.encoder
             .positionConversionFactor(rotsToRads)
             .velocityConversionFactor(rotsToRads / 60.0);
 
-        hoodConfig.closedLoop.pid(0.8, 0, 0).outputRange(-1.0, 1.0);
-
-        homingConfig.apply(hoodConfig);
-        homingConfig.smartCurrentLimit(5);
+        hoodConfig.closedLoop.pid(5.0, 0, 0);
 
         hoodMotor.configure(
             hoodConfig,
@@ -64,23 +63,6 @@ public class HoodIOReal implements HoodIO {
 
     @Override
     public void setAimed(double angleRad) {
-        hoodController.setSetpoint(-angleRad, ControlType.kPosition);
+        hoodController.setSetpoint(angleRad, ControlType.kPosition);
     }
-
-    // @Override
-    // public void prepareHoming() {
-    //     hoodMotor.configure(homingConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-    // }
-
-    // @Override
-    // public void setHoming(double volts) {
-    //     hoodMotor.set(volts);
-    // }
-
-    // @Override
-    // public void resetHoming() {
-    //     hoodMotor.configure(hoodConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-    //     hoodEncoder.setPosition(0.0);
-    // }
-
 }

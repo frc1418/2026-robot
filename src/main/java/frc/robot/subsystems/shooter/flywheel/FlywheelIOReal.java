@@ -6,7 +6,6 @@ import static frc.robot.util.SparkUtil.*;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
@@ -25,6 +24,7 @@ public class FlywheelIOReal implements FlywheelIO {
     private SparkClosedLoopController flywheelController =
         leftFlywheel.getClosedLoopController();
 
+    private boolean reversed = false;
     private boolean isRunning = false;
     private boolean isUsingVoltage = false;
 
@@ -35,12 +35,6 @@ public class FlywheelIOReal implements FlywheelIO {
         leftConfig.idleMode(IdleMode.kCoast).smartCurrentLimit(60);
         leftConfig.closedLoop.pid(0.0004, 0, 0);
         leftConfig.closedLoop.feedForward.sv(0.22560, 0.00183);
-        leftConfig.closedLoop.pid(0.0004, 0, 0, ClosedLoopSlot.kSlot1);
-        leftConfig.closedLoop.feedForward.sv(
-            0.22560,
-            0.00183,
-            ClosedLoopSlot.kSlot1
-        );
 
         rightConfig.apply(leftConfig).follow(leftFlywheel, true);
 
@@ -60,20 +54,15 @@ public class FlywheelIOReal implements FlywheelIO {
     public void updateInputs(FlywheelIOInputs inputs) {
         if (!isUsingVoltage) {
             if (isRunning) {
-                // if (flywheelEncoder.getVelocity() < targetRPM * 0.985) {
-                //     flywheelController.setSetpoint(
-                //         targetRPM,
-                //         ControlType.kVelocity,
-                //         ClosedLoopSlot.kSlot1
-                //     );
-                // } else {
-                flywheelController.setSetpoint(
-                    targetRPM,
-                    ControlType.kVelocity,
-                    ClosedLoopSlot.kSlot0
-                );
-                // }
-                //leftFlywheel.set(0.0);
+                if (reversed) {
+                    leftFlywheel.set(-0.5);
+                } else {
+                    flywheelController.setSetpoint(
+                        targetRPM,
+                        ControlType.kVelocity
+                    );
+                    // leftFlywheel.set(0.35);
+                }
             } else {
                 leftFlywheel.set(0.0);
             }
@@ -105,12 +94,21 @@ public class FlywheelIOReal implements FlywheelIO {
     public void setIdled() {
         isUsingVoltage = false;
         isRunning = false;
+        reversed = false;
     }
 
     @Override
     public void setRunning() {
         isUsingVoltage = false;
         isRunning = true;
+        reversed = false;
+    }
+
+    @Override
+    public void setUnsticking() {
+        isUsingVoltage = false;
+        isRunning = true;
+        reversed = true;
     }
 
     @Override

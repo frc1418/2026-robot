@@ -9,7 +9,6 @@ import frc.robot.subsystems.hopper.pivot.Pivot;
 import frc.robot.subsystems.hopper.pivot.PivotIO;
 import frc.robot.subsystems.hopper.transition.Transition;
 import frc.robot.subsystems.hopper.transition.TransitionIO;
-import frc.robot.subsystems.shooter.Shooter;
 
 public class Hopper extends SubsystemBase {
 
@@ -20,19 +19,18 @@ public class Hopper extends SubsystemBase {
     public Hopper(
         IntakeIO intakeIO,
         PivotIO pivotIO,
-        TransitionIO transitionIO,
-        Shooter shooter
+        TransitionIO transitionIO
     ) {
         this.intake = new Intake(intakeIO);
         this.pivot = new Pivot(pivotIO);
-        this.transition = new Transition(transitionIO, shooter);
+        this.transition = new Transition(transitionIO);
 
         this.setDefaultCommand(idled());
     }
 
     public Command idled() {
         return Commands
-            .parallel(idle(), intake.idled(), pivot.idled(), transition.idled())
+            .parallel(idle(), intake.idled(), pivot.down(), transition.idled())
             .withName("Robot/Hopper/Idled");
     }
 
@@ -73,7 +71,7 @@ public class Hopper extends SubsystemBase {
             .parallel(
                 idle(),
                 intake.running(),
-                pivot.idled(),
+                pivot.down(),
                 transition.idled()
             )
             .withName("Robot/Hopper/Intaking");
@@ -84,7 +82,7 @@ public class Hopper extends SubsystemBase {
             .parallel(
                 idle(),
                 intake.slowRunning(),
-                pivot.idled(),
+                pivot.wiggling(),
                 transition.running()
             )
             .withName("Robot/Hopper/Transitioning");

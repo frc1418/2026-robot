@@ -47,7 +47,7 @@ public class TransitionIOReal implements TransitionIO {
 
     @Override
     public void setRunning() {
-        primary.set(0.35);
+        primary.set(0.15);
         kicker.set(0.5);
     }
 }
