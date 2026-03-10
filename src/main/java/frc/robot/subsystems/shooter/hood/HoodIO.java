@@ -22,10 +22,6 @@ public interface HoodIO {
 
     public default void setAimed(double angle) {}
 
-    // public default void prepareHoming() {}
-
-    // public default void setHoming(double volts) {}
-
-    // public default void resetHoming() {}
+    public default void aimHood(double distanceToHub) {}
 
 }
