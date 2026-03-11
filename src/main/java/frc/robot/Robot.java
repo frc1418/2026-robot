@@ -106,7 +106,7 @@ public class Robot extends LoggedRobot {
 
         // Return to normal thread priority
         Threads.setCurrentThreadPriority(false, 10);
-
+        SmartDashboard.putNumber("MatchTime", DriverStation.getMatchTime());
         SmartDashboard.putData(CommandScheduler.getInstance());
     }
 
