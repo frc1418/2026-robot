@@ -7,7 +7,7 @@ import frc.robot.subsystems.shooter.flywheel.Flywheel;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.hood.Hood;
 import frc.robot.subsystems.shooter.hood.HoodIO;
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 
 public class Shooter extends SubsystemBase {
 
@@ -34,7 +34,7 @@ public class Shooter extends SubsystemBase {
             .withName("Robot/Shooter/HoodIdled");
     }
 
-    public Command hoodAimed(Supplier<Double> angleSupplier) {
+    public Command hoodAimed(DoubleSupplier angleSupplier) {
         return Commands
             .parallel(idle(), flywheel.running(), hood.aimed(angleSupplier))
             .withName("Robot/Shooter/HoodAimed");

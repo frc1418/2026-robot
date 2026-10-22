@@ -6,6 +6,7 @@ import com.reduxrobotics.sensors.canandgyro.Canandgyro;
 import com.reduxrobotics.sensors.canandgyro.CanandgyroSettings;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.Constants;
 import java.util.Queue;
 
 public class GyroIOBoron implements GyroIO {
@@ -19,6 +20,13 @@ public class GyroIOBoron implements GyroIO {
         settings.setYawFramePeriod(1.0 / odometryFrequency);
 
         boronGyro.setSettings(settings);
+
+        boronGyro.setYaw(
+            Constants.startingPose
+                .getRotation()
+                .minus(gyroOffset)
+                .getRotations()
+        );
 
         yawTimestampQueue =
             SparkOdometryThread.getInstance().makeTimestampQueue();

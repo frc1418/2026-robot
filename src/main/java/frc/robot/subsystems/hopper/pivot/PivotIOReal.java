@@ -74,13 +74,16 @@ public class PivotIOReal implements PivotIO {
 
         inputs.motorConnected = true;
 
+        inputs.isDown = inputs.angleRad > 0.9 / Math.PI;
+
         switch (currentState) {
             case IDLED:
                 pivotMotor.set(0.0);
                 break;
             case WIGGLING:
                 pivotController.setSetpoint(
-                    (0.915 + 0.305 * Math.cos(wiggleTimer.get() * 3.0)) /
+                    // 0.915-0.305
+                    (0.765 - 0.455 * Math.cos(wiggleTimer.get() * 3.0)) /
                     Math.PI,
                     ControlType.kPosition
                 );

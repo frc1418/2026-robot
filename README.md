@@ -3,24 +3,21 @@
 robot
 ├─ shooter
 │  ├─ flywheel
-│  │  ├─ FlywheelIOReal     (TODO: ADD)
-│  │  └─ FlywheelIOSim      (TODO: REFACTOR)
+│  │  ├─ FlywheelIOReal
+│  │  └─ FlywheelIOSim
 │  └─ hood
-│     ├─ HoodIOReal         (TODO: ADD)
-│     └─ HoodIOSim          (TODO: REFACTOR)
+│     ├─ HoodIOReal
+│     └─ HoodIOSim
 ├─ hopper
 │  ├─ intake
-│  │  ├─ IntakeIOReal       (TODO: ADD)
-│  │  └─ IntakeIOSim        (TODO: REFACTOR)
+│  │  ├─ IntakeIOReal
+│  │  └─ IntakeIOSim
 │  ├─ pivot
-│  │  ├─ pivotIOReal  (TODO: ADD)
-│  │  └─ pivotIOSim   (TODO: ADD)
+│  │  ├─ pivotIOReal
+│  │  └─ pivotIOSim
 │  └─ transition
-│     ├─ TransistionIOReal  (TODO: ADD)
-│     └─ TransistionIOSim   (TODO: REFACTOR)
-├─ climber
-│  ├─ ClimberIOReal         (TODO: ADD)
-│  └─ ClimberIOSim          (TODO: ADD)
+│     ├─ TransistionIOReal
+│     └─ TransistionIOSim
 ├─ drive
 │  ├─ module (x4)
 │  │  ├─ ModuleIOSpark

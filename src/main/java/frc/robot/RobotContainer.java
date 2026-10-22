@@ -20,18 +20,18 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+// import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.Rebuilt;
+import frc.robot.commands.RebuiltAutos;
 import frc.robot.commands.drive.DefaultDriveCommands;
-import frc.robot.subsystems.climb.Climb;
-import frc.robot.subsystems.climb.ClimbIO;
-import frc.robot.subsystems.climb.ClimbIOReal;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.intake.IntakeIO;
@@ -43,6 +43,9 @@ import frc.robot.subsystems.hopper.pivot.PivotIOSim;
 import frc.robot.subsystems.hopper.transition.TransitionIO;
 import frc.robot.subsystems.hopper.transition.TransitionIOReal;
 import frc.robot.subsystems.hopper.transition.TransitionIOSim;
+import frc.robot.subsystems.led.Led;
+import frc.robot.subsystems.led.LedIO;
+import frc.robot.subsystems.led.LedIOReal;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIO;
 import frc.robot.subsystems.shooter.flywheel.FlywheelIOReal;
@@ -74,26 +77,15 @@ public class RobotContainer {
 
     private final Hopper hopper;
     private final Shooter shooter;
-    private final Climb climber;
+    private final Led leds;
     private SwerveDriveSimulation driveSimulation = null;
 
     // Controller
     private final CommandJoystick leftJoystick = new CommandJoystick(0);
     private final CommandJoystick rightJoystick = new CommandJoystick(1);
-    private final CommandXboxController altController =
-        new CommandXboxController(2);
 
     // Dashboard inputs
     private final LoggedDashboardChooser<Command> autoChooser;
-
-    // 4.122723side, 1.75length, 3.668583up
-    // 13.5
-    // 9.377277side, 11.75length, 7.918583up
-
-    // 0.29845 forward, -0.2381828358 right, 0.2011320082 up
-    // pitch: 33
-
-    // shooter offset: x: 0.5207, y: 0.5334
 
     /** The container for the robot. Contains subsystems, IO devices, and commands. */
     public RobotContainer() {
@@ -131,14 +123,14 @@ public class RobotContainer {
                         new PivotIOReal(),
                         new TransitionIOReal()
                     );
-                this.climber = new Climb(new ClimbIOReal());
+                this.leds = new Led(new LedIOReal());
                 break;
             case SIM:
                 // create a maple-sim swerve drive simulation instance
                 this.driveSimulation =
                     new SwerveDriveSimulation(
                         DriveConstants.mapleSimConfig,
-                        new Pose2d(3, 3, new Rotation2d())
+                        Constants.startingPose
                     );
 
                 // add the simulated drivetrain to the simulation field
@@ -179,7 +171,7 @@ public class RobotContainer {
 
                 shooter = new Shooter(flywheel, hood);
                 hopper = new Hopper(intake, pivot, transition);
-                climber = new Climb(new ClimbIO() {});
+                leds = new Led(new LedIO() {});
 
                 break;
             default:
@@ -202,10 +194,53 @@ public class RobotContainer {
                         new PivotIO() {},
                         new TransitionIO() {}
                     );
-                climber = new Climb(new ClimbIO() {});
+                leds = new Led(new LedIO() {});
 
                 break;
         }
+
+        VictiPathBuilder.configure(
+            drive,
+            () -> {
+                boolean isRed =
+                    DriverStation.getAlliance().isPresent() &&
+                    DriverStation.getAlliance().get() == Alliance.Red;
+                Pose2d pose = drive.getPose();
+                if (isRed) {
+                    return new Pose2d(
+                        16.5354 - pose.getX(),
+                        8.0518 - pose.getY(),
+                        pose.getRotation().plus(Rotation2d.k180deg)
+                    );
+                } else {
+                    return pose;
+                }
+            },
+            drive::runVelocity,
+            new HolonomicPID(2.0, 0.0, 0.0, 5.0, 0.0, 0.0),
+            maxSpeedMetersPerSec,
+            3.0
+        );
+
+        VictiPathBuilder.setLogging((Translation2d[] path) -> {
+            boolean isRed =
+                DriverStation.getAlliance().isPresent() &&
+                DriverStation.getAlliance().get() == Alliance.Red;
+            Pose2d[] poses = new Pose2d[path.length];
+            for (int i = 0; i < path.length; i++) {
+                if (isRed) {
+                    poses[i] =
+                        new Pose2d(
+                            16.5354 - path[i].getX(),
+                            8.0518 - path[i].getY(),
+                            Rotation2d.k180deg
+                        );
+                } else {
+                    poses[i] = new Pose2d(path[i], Rotation2d.kZero);
+                }
+            }
+            Logger.recordOutput("pathFollower/Path", poses);
+        });
 
         // Set up auto routines
         autoChooser =
@@ -215,47 +250,51 @@ public class RobotContainer {
             );
 
         // Set up SysId routines
-        autoChooser.addOption(
-            "Drive Wheel Radius Characterization",
-            DefaultDriveCommands.wheelRadiusCharacterization(drive)
-        );
-        autoChooser.addOption(
-            "Drive Simple FF Characterization",
-            DefaultDriveCommands.feedforwardCharacterization(drive)
-        );
-        autoChooser.addOption(
-            "Drive SysId (Quasistatic Forward)",
-            drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
-        );
-        autoChooser.addOption(
-            "Drive SysId (Quasistatic Reverse)",
-            drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
-        );
-        autoChooser.addOption(
-            "Drive SysId (Dynamic Forward)",
-            drive.sysIdDynamic(SysIdRoutine.Direction.kForward)
-        );
-        autoChooser.addOption(
-            "Drive SysId (Dynamic Reverse)",
-            drive.sysIdDynamic(SysIdRoutine.Direction.kReverse)
-        );
+        // autoChooser.addOption(
+        //     "Drive Wheel Radius Characterization",
+        //     DefaultDriveCommands.wheelRadiusCharacterization(drive)
+        // );
+        // autoChooser.addOption(
+        //     "Drive Simple FF Characterization",
+        //     DefaultDriveCommands.feedforwardCharacterization(drive)
+        // );
+        // autoChooser.addOption(
+        //     "Drive SysId (Quasistatic Forward)",
+        //     drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+        // );
+        // autoChooser.addOption(
+        //     "Drive SysId (Quasistatic Reverse)",
+        //     drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
+        // );
+        // autoChooser.addOption(
+        //     "Drive SysId (Dynamic Forward)",
+        //     drive.sysIdDynamic(SysIdRoutine.Direction.kForward)
+        // );
+        // autoChooser.addOption(
+        //     "Drive SysId (Dynamic Reverse)",
+        //     drive.sysIdDynamic(SysIdRoutine.Direction.kReverse)
+        // );
 
-        VictiPathBuilder.configure(
-            drive,
-            drive::getPose,
-            drive::runVelocity,
-            new HolonomicPID(5.0, 0.0, 0.0, 5.0, 0.0, 0.0),
-            maxSpeedMetersPerSec,
-            3.0
+        autoChooser.addOption(
+            "Only Eight",
+            RebuiltAutos.onlyEight(drive, shooter, hopper, leds)
         );
-
-        VictiPathBuilder.setLogging((Translation2d[] path) -> {
-            Pose2d[] poses = new Pose2d[path.length];
-            for (int i = 0; i < path.length; i++) {
-                poses[i] = new Pose2d(path[i], Rotation2d.kZero);
-            }
-            Logger.recordOutput("pathFollower/Path", poses);
-        });
+        autoChooser.addOption(
+            "OnlyEightThenDepot",
+            RebuiltAutos.onlyEightThenDepot(drive, shooter, hopper, leds)
+        );
+        autoChooser.addOption(
+            "OnlyEightRightSide",
+            RebuiltAutos.onlyEightRightSide(drive, shooter, hopper, leds)
+        );
+        autoChooser.addOption(
+            "EightToOutpost",
+            RebuiltAutos.eightToOutpost(drive, shooter, hopper, leds)
+        );
+        autoChooser.addOption(
+            "CenterDip",
+            RebuiltAutos.centerDip(drive, shooter, hopper, leds)
+        );
 
         // Configure the button bindings
         configureButtonBindings();
@@ -278,38 +317,43 @@ public class RobotContainer {
             )
         );
 
-        // leftJoystick
-        //     .button(1)
-        //     .whileTrue(
-        //         Commands.parallel(
-        //             Rebuilt.driveAlignedToHub(
-        //                 drive,
-        //                 () -> -leftJoystick.getY(),
-        //                 () -> -leftJoystick.getX()
-        //             )
-        //             //hopper.transitioning()
-        //         )
-        //     );
-
         leftJoystick
             .button(1)
             .whileTrue(
-                shooter.hoodAimed(() -> {
-                    Logger.recordOutput(
-                        "HubDistance",
-                        new Translation2d(11.938, 4.034536)
-                            .getDistance(drive.getPose().getTranslation())
-                    );
-                    return leftJoystick.getThrottle() * -0.25 + 0.25;
-                })
+                Commands.sequence(
+                    Commands.deadline(
+                        Rebuilt.alignToHubStatic(drive, leds),
+                        shooter.hoodAimed(Rebuilt.aimFromHubDistance(drive))
+                    ),
+                    Commands.parallel(
+                        hopper.transitioning(),
+                        shooter.hoodAimed(Rebuilt.aimFromHubDistance(drive)),
+                        leds.shiftOrDisabled()
+                    )
+                )
             );
+
+        // leftJoystick
+        //     .button(1)
+        //     .whileTrue(
+        //         shooter.hoodAimed(() -> {
+        //             Logger.recordOutput(
+        //                 "HubDistance",
+        //                 new Translation2d(11.938, 4.034536)
+        //                     .getDistance(drive.getPose().getTranslation())
+        //             );
+        //             return leftJoystick.getThrottle() * -0.25 + 0.25;
+        //         })
+        //     );
 
         leftJoystick.button(2).whileTrue(hopper.intaking());
         leftJoystick.button(3).whileTrue(hopper.transitioning());
 
-        rightJoystick.button(1).whileTrue(Rebuilt.moveToTestingPosition(drive));
-        rightJoystick.button(3).onTrue(Rebuilt.resetTestingDistance());
-        rightJoystick.button(4).onTrue(Rebuilt.increaseTestingDistance());
+        rightJoystick.button(1).whileTrue(hopper.unjamming());
+
+        // rightJoystick.button(1).whileTrue(Rebuilt.moveToTestingPosition(drive));
+        // rightJoystick.button(3).onTrue(Rebuilt.resetTestingDistance());
+        // rightJoystick.button(4).onTrue(Rebuilt.increaseTestingDistance());
 
         // leftJoystick
         //     .button(4)
@@ -318,19 +362,8 @@ public class RobotContainer {
         //             new Pose2d(8.230, 4.035, Rotation2d.k180deg)
         //         )
         //     );
-        //leftJoystick.button(4).onTrue(Rebuilt.testHolonomicProfiler(drive));
-
-        //rightJoystick.button(1).whileTrue(shooter.hoodAimed(() -> 60.0));
 
         // rightJoystick.button(1).whileTrue(shooter.runShooterFFSysID());
-
-        //rightJoystick.button(3).whileTrue(climber.climb());
-        //rightJoystick.button(4).whileTrue(climber.declimb());
-        altController.x().whileTrue(climber.climb());
-        altController.b().whileTrue(climber.declimb());
-
-        //rightJoystick.button(3).whileTrue(shooter.changeAngle(5));
-        //rightJoystick.button(4).whileTrue(shooter.changeAngle(-5));
 
         /*leftJoystick
             .button(3)
@@ -356,48 +389,38 @@ public class RobotContainer {
                 ); // zero gyro
 
         rightJoystick.button(2).onTrue(Commands.runOnce(resetGyro));
-        // rightJoystick.button(5).onTrue(
-        //     Commands.runOnce(() -> { shooter.hoodAimed(() -> 0.0).schedule(); })
-        // );
-        // rightJoystick.button(6).onTrue(
-        //     Commands.runOnce(() -> { shooter.hoodAimed(() -> 0.5).schedule(); })
-        // );
 
-        // rightJoystick.button(7).onTrue(
-        //     Commands.runOnce(() -> { shooter.hoodAimed(() -> 1.0).schedule(); })
-        // );
+        SmartDashboard.putNumber("ResetPoseX", 3.5);
+        SmartDashboard.putNumber("ResetPoseY", 5.0);
+        SmartDashboard.putNumber("ResetPoseTheta", 0.0);
+        SmartDashboard.putData(
+            Commands
+                .runOnce(() -> {
+                    double x = SmartDashboard.getNumber("ResetPoseX", 0.0);
+                    double y = SmartDashboard.getNumber("ResetPoseY", 0.0);
+                    Rotation2d theta = Rotation2d.fromDegrees(
+                        SmartDashboard.getNumber("ResetPoseTheta", 0.0)
+                    );
 
-        // shooter.setDefaultCommand(
-        //     shooter.hoodAimed(() -> {
-        //         double rawAxis = rightJoystick.getRawAxis(3);
-        //         double sliderValue = (-rawAxis + 1.0) * 0.5;
-        //         return sliderValue;
-        //     })
-        // );
-        // rightJoystick.button(8).onTrue(shooter.hoodHome());
+                    boolean isRed =
+                        DriverStation.getAlliance().isPresent() &&
+                        DriverStation.getAlliance().get() == Alliance.Red;
 
-        //rightJoystick.button(2).whileTrue(new LLCoralIntake(drive, vision));
-        /*
-
-        // Lock to 0° when A button is held
-        controller
-                .a()
-                .whileTrue(DriveCommands.joystickDriveAtAngle(
-                        drive, () -> -controller.getLeftY(), () -> -controller.getLeftX(), () -> new Rotation2d()));
-
-        // Switch to X pattern when X button is pressed
-        controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-        // Reset gyro / odometry
-        final Runnable resetGyro = Constants.currentMode == Constants.Mode.SIM
-                ? () -> drive.resetOdometry(
-                        driveSimulation
-                                .getSimulatedDriveTrainPose()) // reset odometry to actual robot pose during simulation
-                : () -> drive.resetOdometry(
-                        new Pose2d(drive.getPose().getTranslation(), new Rotation2d())); // zero gyro
-        controller.start().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
-
-        */
+                    if (isRed) {
+                        drive.resetOdometry(
+                            new Pose2d(
+                                16.5354 - x,
+                                8.0518 - y,
+                                theta.plus(Rotation2d.k180deg)
+                            )
+                        );
+                    } else {
+                        drive.resetOdometry(new Pose2d(x, y, theta));
+                    }
+                })
+                .withName("Set Odometry")
+                .ignoringDisable(true)
+        );
     }
 
     /**
@@ -406,13 +429,13 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Commands.none();
+        return autoChooser.get();
     }
 
     public void resetSimulationField() {
         if (Constants.currentMode != Constants.Mode.SIM) return;
 
-        drive.resetOdometry(new Pose2d(3, 3, new Rotation2d()));
+        drive.resetOdometry(Constants.startingPose);
         SimulatedArena.getInstance().resetFieldForAuto();
     }
 

@@ -68,23 +68,50 @@ public class Hopper extends SubsystemBase {
         //     )
         //     .withName("Robot/Hopper/Intaking");
         return Commands
-            .parallel(
-                idle(),
-                intake.running(),
-                pivot.down(),
-                transition.idled()
+            .sequence(
+                Commands.deadline(
+                    Commands.waitUntil(() -> pivot.isDown()),
+                    intake.idled(),
+                    pivot.down(),
+                    transition.idled()
+                ),
+                Commands.parallel(
+                    intake.running(),
+                    pivot.down(),
+                    transition.idled()
+                ),
+                idle()
             )
             .withName("Robot/Hopper/Intaking");
     }
 
     public Command transitioning() {
         return Commands
-            .parallel(
-                idle(),
-                intake.slowRunning(),
-                pivot.wiggling(),
-                transition.running()
+            .sequence(
+                Commands.deadline(
+                    Commands.waitUntil(() -> pivot.isDown()),
+                    intake.idled(),
+                    pivot.down(),
+                    transition.running()
+                ),
+                Commands.parallel(
+                    intake.slowRunning(),
+                    pivot.wiggling(),
+                    transition.running()
+                ),
+                idle()
             )
             .withName("Robot/Hopper/Transitioning");
+    }
+
+    public Command unjamming() {
+        return Commands
+            .parallel(
+                idle(),
+                intake.idled(),
+                pivot.down(),
+                transition.reversed()
+            )
+            .withName("Robot/Hopper/Idled");
     }
 }

@@ -3,7 +3,7 @@ package frc.robot.subsystems.shooter.hood;
 // import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
 public class Hood extends SubsystemBase {
@@ -33,13 +33,12 @@ public class Hood extends SubsystemBase {
             .withName("Robot/Shooter/Hood/Idled");
     }
 
-    public Command aimed(Supplier<Double> angleSupplier) {
+    public Command aimed(DoubleSupplier angleSupplier) {
         return run(() -> {
-                io.setAimed(angleSupplier.get());
+                io.setAimed(angleSupplier.getAsDouble());
             })
             .withName("Robot/Shooter/Hood/Aimed");
     }
-    
     // public Command home() {
     //     return run(() -> {
     //         io.setHoming(0.1); // change to positive if needed and maybe reduce/increase voltage (test ts)

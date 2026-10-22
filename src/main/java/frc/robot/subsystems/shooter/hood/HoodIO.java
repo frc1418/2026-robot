@@ -10,9 +10,8 @@ public interface HoodIO {
         public double velocityRadPerSecond;
         public double appliedVolts;
         public double currentAmps;
-        public double inputAngle;
-        public double outputAngle;
-
+        public double inputAngleRad;
+        public double outputAngleRad;
     }
 
     /** Updates the set of loggable inputs. */
@@ -21,7 +20,4 @@ public interface HoodIO {
     public default void setIdled() {}
 
     public default void setAimed(double angle) {}
-
-    public default void aimHood(double distanceToHub) {}
-
 }

@@ -44,4 +44,11 @@ public class Transition extends SubsystemBase {
             })
             .withName("Robot/Hopper/Transition/Running");
     }
+
+    public Command reversed() {
+        return run(() -> {
+                io.setReversed();
+            })
+            .withName("Robot/Hopper/Transition/Reversed");
+    }
 }

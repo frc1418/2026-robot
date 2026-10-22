@@ -55,10 +55,10 @@ public class FlywheelIOReal implements FlywheelIO {
         if (!isUsingVoltage) {
             if (isRunning) {
                 if (reversed) {
-                    leftFlywheel.set(-0.5);
+                    leftFlywheel.set(0.0);
                 } else {
                     flywheelController.setSetpoint(
-                        targetRPM,
+                        0.0,
                         ControlType.kVelocity
                     );
                     // leftFlywheel.set(0.35);
@@ -114,6 +114,6 @@ public class FlywheelIOReal implements FlywheelIO {
     @Override
     public void setVoltageForSysID(double voltage) {
         isUsingVoltage = true;
-        leftFlywheel.setVoltage(voltage);
+        leftFlywheel.setVoltage(0.0);
     }
 }

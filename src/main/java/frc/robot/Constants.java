@@ -13,6 +13,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -23,10 +26,18 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  */
 public final class Constants {
 
+    public static Alliance alliance = Alliance.Red;
+
     public static final Mode simMode = Mode.SIM;
     public static final Mode currentMode = RobotBase.isReal()
         ? Mode.REAL
         : simMode;
+
+    public static final Pose2d startingPose = new Pose2d(
+        0.0,
+        0.0,
+        Rotation2d.kZero
+    );
 
     public static enum Mode {
         /** Running on a real robot. */

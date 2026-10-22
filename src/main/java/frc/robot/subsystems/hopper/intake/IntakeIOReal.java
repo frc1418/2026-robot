@@ -13,7 +13,6 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 public class IntakeIOReal implements IntakeIO {
 
     private SparkMax motor = new SparkMax(15, MotorType.kBrushless);
-    private SparkMax kicker = new SparkMax(17, MotorType.kBrushless);
     private RelativeEncoder speedEncoder = motor.getEncoder();
 
     public IntakeIOReal() {
@@ -22,11 +21,6 @@ public class IntakeIOReal implements IntakeIO {
         config.idleMode(IdleMode.kCoast).smartCurrentLimit(40);
 
         motor.configure(
-            config,
-            ResetMode.kResetSafeParameters,
-            PersistMode.kPersistParameters
-        );
-        kicker.configure(
             config,
             ResetMode.kResetSafeParameters,
             PersistMode.kPersistParameters
@@ -50,18 +44,15 @@ public class IntakeIOReal implements IntakeIO {
     @Override
     public void setIdled() {
         motor.set(0.0);
-        kicker.set(0.0);
     }
 
     @Override
     public void setRunningSlow() {
         motor.set(0.5);
-        kicker.set(-0.5);
     }
 
     @Override
     public void setRunning() {
         motor.set(1.0);
-        kicker.set(-0.5);
     }
 }

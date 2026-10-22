@@ -22,4 +22,6 @@ public interface TransitionIO {
     public default void setIdled() {}
 
     public default void setRunning() {}
+
+    public default void setReversed() {}
 }

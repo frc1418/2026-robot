@@ -8,7 +8,7 @@ public class HoodIOSim implements HoodIO {
 
     @Override
     public void updateInputs(HoodIOInputs inputs) {
-        inputs.outputAngle = Units.degreesToRadians(angleDeg);
+        inputs.outputAngleRad = Units.degreesToRadians(angleDeg);
     }
 
     @Override

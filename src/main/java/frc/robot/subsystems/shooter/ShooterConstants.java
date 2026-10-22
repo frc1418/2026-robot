@@ -6,5 +6,5 @@ public class ShooterConstants {
     public static int rightFlywheelMotorID = 10;
     public static int hoodMotorID = 11;
 
-    public static double targetRPM = 3000;
+    public static double targetRPM = 2500;
 }

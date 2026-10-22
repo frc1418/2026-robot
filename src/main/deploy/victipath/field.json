@@ -10,9 +10,9 @@
   },
   "middle_top": {
     "x": 6.597,
-    "y": 6.493,
+    "y": 5.993,
     "links": [
-      "upper_trench_right",
+      "upper_bump_right",
       "middle_center",
       "field_center"
     ]
@@ -28,58 +28,62 @@
   },
   "middle_bottom": {
     "x": 6.597,
-    "y": 1.593,
+    "y": 2.093,
     "links": [
       "middle_center",
       "field_center",
-      "lower_trench_right"
+      "lower_bump_right"
     ]
   },
-  "upper_trench_left": {
+  "upper_bump_left": {
     "x": 3.597,
-    "y": 7.464,
+    "y": 5.464,
     "links": [
       "alliance_top",
-      "upper_trench_middle"
+      "upper_bump_middle",
+      "tower_center",
+      "tower_top"
     ]
   },
-  "upper_trench_middle": {
+  "upper_bump_middle": {
     "x": 4.597,
-    "y": 7.464,
+    "y": 5.464,
     "links": [
-      "upper_trench_left",
-      "upper_trench_right"
+      "upper_bump_left",
+      "upper_bump_right"
     ]
   },
-  "upper_trench_right": {
+  "upper_bump_right": {
     "x": 5.597,
-    "y": 7.464,
+    "y": 5.464,
     "links": [
-      "upper_trench_middle",
+      "upper_bump_middle",
       "middle_top"
     ]
   },
-  "lower_trench_left": {
+  "lower_bump_left": {
     "x": 3.597,
-    "y": 0.634,
+    "y": 2.634,
     "links": [
       "alliance_bottom",
-      "lower_trench_middle"
+      "lower_bump_middle",
+      "tower_center",
+      "tower_bottom"
     ]
   },
-  "lower_trench_middle": {
+  "lower_bump_middle": {
     "x": 4.597,
-    "y": 0.634,
+    "y": 2.634,
     "links": [
-      "lower_trench_left",
-      "lower_trench_right"
+      "lower_bump_left",
+      "lower_bump_right"
     ]
   },
-  "lower_trench_right": {
+  "lower_bump_right": {
     "x": 5.597,
-    "y": 0.634,
+    "y": 2.634,
     "links": [
-      "lower_trench_middle",
+      "lower_bump_middle",
       "middle_bottom"
     ]
   },
@@ -87,7 +91,7 @@
     "x": 2.597,
     "y": 6.376,
     "links": [
-      "upper_trench_left",
+      "upper_bump_left",
       "tower_top",
       "tower_center",
       "depot"
@@ -97,7 +101,7 @@
     "x": 2.597,
     "y": 1.593,
     "links": [
-      "lower_trench_left",
+      "lower_bump_left",
       "tower_bottom",
       "tower_center",
       "outpost"
@@ -109,7 +113,8 @@
     "links": [
       "alliance_top",
       "tower_center",
-      "depot"
+      "depot",
+      "upper_bump_left"
     ]
   },
   "tower_center": {
@@ -119,7 +124,9 @@
       "tower_top",
       "tower_bottom",
       "alliance_top",
-      "alliance_bottom"
+      "alliance_bottom",
+      "upper_bump_left",
+      "lower_bump_left"
     ]
   },
   "tower_bottom": {
@@ -128,7 +135,8 @@
     "links": [
       "alliance_bottom",
       "tower_center",
-      "outpost"
+      "outpost",
+      "lower_bump_left"
     ]
   },
   "depot": {
