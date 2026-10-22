@@ -17,12 +17,12 @@ import java.util.function.DoubleSupplier;
 
 public class FlywheelIOReal implements FlywheelIO {
 
-    private SparkFlex leftFlywheel = new SparkFlex(9, MotorType.kBrushless);
+    // private SparkFlex leftFlywheel = new SparkFlex(9, MotorType.kBrushless);
     private SparkFlex rightFlywheel = new SparkFlex(10, MotorType.kBrushless);
 
-    private RelativeEncoder flywheelEncoder = leftFlywheel.getEncoder();
+    private RelativeEncoder flywheelEncoder = rightFlywheel.getEncoder();
     private SparkClosedLoopController flywheelController =
-        leftFlywheel.getClosedLoopController();
+        rightFlywheel.getClosedLoopController();
 
     private boolean reversed = false;
     private boolean isRunning = false;
@@ -36,13 +36,13 @@ public class FlywheelIOReal implements FlywheelIO {
         leftConfig.closedLoop.pid(0.0004, 0, 0);
         leftConfig.closedLoop.feedForward.sv(0.22560, 0.00183);
 
-        rightConfig.apply(leftConfig).follow(leftFlywheel, true);
+        rightConfig.apply(leftConfig)/*.follow(leftFlywheel, true)*/;
 
-        leftFlywheel.configure(
-            leftConfig,
-            ResetMode.kResetSafeParameters,
-            PersistMode.kPersistParameters
-        );
+        // leftFlywheel.configure(
+        //     leftConfig,
+        //     ResetMode.kResetSafeParameters,
+        //     PersistMode.kPersistParameters
+        // );
         rightFlywheel.configure(
             rightConfig,
             ResetMode.kNoResetSafeParameters,
@@ -55,36 +55,36 @@ public class FlywheelIOReal implements FlywheelIO {
         if (!isUsingVoltage) {
             if (isRunning) {
                 if (reversed) {
-                    leftFlywheel.set(0.0);
+                    rightFlywheel.set(0.0);
                 } else {
                     flywheelController.setSetpoint(
-                        0.0,
+                        targetRPM,
                         ControlType.kVelocity
                     );
-                    // leftFlywheel.set(0.35);
+                    // rightFlywheel.set(0.35);
                 }
             } else {
-                leftFlywheel.set(0.0);
+                rightFlywheel.set(0.0);
             }
         }
         ifOk(
-            leftFlywheel,
+            rightFlywheel,
             flywheelEncoder::getVelocity,
             value ->
                 inputs.velocityRadPerSecond =
                     Units.rotationsPerMinuteToRadiansPerSecond(value)
         );
         ifOk(
-            leftFlywheel,
+            rightFlywheel,
             new DoubleSupplier[] {
-                leftFlywheel::getAppliedOutput,
-                leftFlywheel::getBusVoltage
+                rightFlywheel::getAppliedOutput,
+                rightFlywheel::getBusVoltage
             },
             values -> inputs.appliedVolts = values[0] * values[1]
         );
         ifOk(
-            leftFlywheel,
-            leftFlywheel::getOutputCurrent,
+            rightFlywheel,
+            rightFlywheel::getOutputCurrent,
             value -> inputs.currentAmps = value
         );
         inputs.motorsConnected = !sparkStickyFault;
@@ -114,6 +114,6 @@ public class FlywheelIOReal implements FlywheelIO {
     @Override
     public void setVoltageForSysID(double voltage) {
         isUsingVoltage = true;
-        leftFlywheel.setVoltage(0.0);
+        rightFlywheel.setVoltage(0.0);
     }
 }
